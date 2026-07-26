@@ -34,5 +34,8 @@ target_compile_features(levelset_metrology INTERFACE cxx_std_17)
 # transitively Eigen's) include paths too.
 target_link_libraries(levelset_metrology INTERFACE common_geometry)
 
-enable_testing()
-add_subdirectory(tests)
+option(LEVELSET_METROLOGY_BUILD_TESTS "Build tests" ON)
+if(LEVELSET_METROLOGY_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
