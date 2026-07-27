@@ -54,3 +54,63 @@ classic face-saddle ambiguity).
 
 A 2D analog (`Polygon2d` edge crossings + bilinear interpolation) doesn't
 exist yet; add it here, alongside these, whenever a 2D use case shows up.
+
+## Python bindings
+
+A [pybind11](https://github.com/pybind/pybind11) module (`_levelset_metrology`,
+re-exported as `levelset_metrology`) exposes this library's C++ API to
+Python for interactive analysis in Jupyter, built via
+[scikit-build-core](https://github.com/scikit-build/scikit-build-core).
+
+Scoped exactly like the C++ library itself: `common_geometry` types
+(`Mesh3d`) and this project's own functions
+(`trilinear_value`, `find_trilinear_crossings`, `ray_triangle_intersect`,
+`find_mesh_crossings`) only -- no extraction algorithm (no marching
+cubes, no marching squares) is bound or depended on here. A small
+pure-Python helper module, `known_cases`, fills the resulting gap for
+demos: it hand-reconstructs the two classic marching-cubes face-saddle
+triangulations (case 5 / case 10) directly from the corner-value
+interpolation formula, without calling any extraction library. This is
+verified (see `python/tests/test_bindings.py`) to reproduce, to within
+floating-point tolerance, the exact crossing values that
+`levelset3d_polygon`'s real marching-cubes implementation produces for
+the same corner values.
+
+### Install
+
+```sh
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -e ".[notebook]"
+```
+
+(Any Python >= 3.10 works; `uv venv --python 3.12` is just a known-good
+pin for the notebook/Plotly/NumPy wheel stack at time of writing.)
+
+### Usage
+
+```python
+import numpy as np
+import levelset_metrology as lm
+
+v = [-1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0]
+lm.find_trilinear_crossings(v, np.array([0.0, 0.3, 0.7]), np.array([1.0, 0.0, 0.0]))
+# -> [0.5]
+```
+
+### Notebook
+
+[`python/notebooks/exploration.ipynb`](python/notebooks/exploration.ipynb)
+walks through the primitives above and reproduces
+`levelset3d_polygon/analysis/saddle_intersection_analysis.cpp`'s case
+5/10 sweep interactively (slider-driven, via `ipywidgets`), using
+`known_cases.case5_mesh`/`case10_mesh` in place of a real marching-cubes
+call. Launch with:
+
+```sh
+jupyter lab python/notebooks/
+```
+
+This Python layer used to live in a separate `levelset_python` repo
+(alongside bindings for the other 4 projects); it was folded in here so
+the metrology-specific Python surface has one home, decoupled from any
+extraction algorithm's binding lifecycle.

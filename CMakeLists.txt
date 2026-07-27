@@ -39,3 +39,15 @@ if(LEVELSET_METROLOGY_BUILD_TESTS)
   enable_testing()
   add_subdirectory(tests)
 endif()
+
+# Off by default: a plain `cmake -B build && cmake --build build` (e.g.
+# from build_all.sh) has no reason to require Python/pybind11. The
+# Python packaging build (pyproject.toml, via scikit-build-core) turns
+# this ON explicitly -- see the top-level README's Python section.
+option(LEVELSET_METROLOGY_BUILD_PYTHON "Build Python bindings (requires pybind11)" OFF)
+if(LEVELSET_METROLOGY_BUILD_PYTHON)
+  find_package(pybind11 CONFIG REQUIRED)
+  pybind11_add_module(_levelset_metrology python/src/python_bindings.cpp)
+  target_link_libraries(_levelset_metrology PRIVATE levelset_metrology)
+  install(TARGETS _levelset_metrology DESTINATION levelset_metrology)
+endif()

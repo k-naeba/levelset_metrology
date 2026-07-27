@@ -1,0 +1,29 @@
+[build-system]
+requires = ["scikit-build-core>=0.9", "pybind11>=2.12"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "levelset-metrology"
+version = "0.1.0"
+description = "Python bindings for levelset_metrology: mesh-vs-trilinear crossing measurement primitives"
+requires-python = ">=3.10"
+dependencies = [
+    "numpy",
+]
+
+[project.optional-dependencies]
+viz = ["plotly"]
+notebook = ["jupyterlab", "plotly", "ipywidgets"]
+
+[tool.scikit-build]
+wheel.packages = ["python/levelset_metrology"]
+cmake.build-type = "Release"
+
+[tool.scikit-build.cmake.define]
+LEVELSET_METROLOGY_BUILD_PYTHON = "ON"
+LEVELSET_METROLOGY_BUILD_TESTS = "OFF"
+# common_geometry is pulled in transitively (add_subdirectory) and
+# defaults its own tests ON for a standalone checkout; turn that off
+# too so this build doesn't also fetch+build+install GoogleTest for
+# common_geometry's sake.
+COMMON_GEOMETRY_BUILD_TESTS = "OFF"
