@@ -52,6 +52,15 @@ trilinear interpolant actually cross zero" -- see that project's README
 for the actual findings (a real, quantified topology disagreement at the
 classic face-saddle ambiguity).
 
+[`docs/saddle_crossing_diff.html`](docs/saddle_crossing_diff.html)
+visualizes that disagreement: crossing position vs. the inside-corner
+magnitude `s` across the full sweep, plus two field heatmaps (`s =
+0.30`, agreeing but offset; `s = 2.00`, disagreeing) showing why -- the
+two negative lobes at the saddle's inside corners merge into one
+connected region above the threshold, so the probe stops crossing zero
+even though the fixed mesh triangulation still reports a gap. Open the
+file directly in a browser (it's self-contained, no server needed).
+
 A 2D analog (`Polygon2d` edge crossings + bilinear interpolation) doesn't
 exist yet; add it here, alongside these, whenever a 2D use case shows up.
 

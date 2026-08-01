@@ -1,0 +1,613 @@
+<meta charset="utf-8">
+<title>Mesh vs. Trilinear Crossings — levelset_metrology</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --bg:            #f6f6f4;
+    --surface:        #ffffff;
+    --surface-sunken: #f0f0ed;
+    --border:         #e1e1dc;
+    --text-primary:   #14151a;
+    --text-secondary: #55565f;
+    --text-muted:     #86868c;
+
+    --mesh:      #2a78d6;
+    --mesh-fill: rgba(42, 120, 214, 0.16);
+    --tri:       #eb6834;
+    --tri-fill:  rgba(235, 104, 52, 0.16);
+
+    --inside:  #2a78d6;
+    --outside: #e34948;
+    --diverge-mid: #f0efec;
+
+    --threshold: #9a9a92;
+    --focus: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --bg:            #121316;
+      --surface:        #1b1c20;
+      --surface-sunken: #202126;
+      --border:         #2c2d33;
+      --text-primary:   #f3f3f1;
+      --text-secondary: #b6b7bf;
+      --text-muted:     #797a82;
+
+      --mesh:      #3987e5;
+      --mesh-fill: rgba(57, 135, 229, 0.20);
+      --tri:       #d95926;
+      --tri-fill:  rgba(217, 89, 38, 0.22);
+
+      --inside:  #3987e5;
+      --outside: #e66767;
+      --diverge-mid: #383835;
+
+      --threshold: #55565f;
+      --focus: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --bg:            #121316;
+    --surface:        #1b1c20;
+    --surface-sunken: #202126;
+    --border:         #2c2d33;
+    --text-primary:   #f3f3f1;
+    --text-secondary: #b6b7bf;
+    --text-muted:     #797a82;
+
+    --mesh:      #3987e5;
+    --mesh-fill: rgba(57, 135, 229, 0.20);
+    --tri:       #d95926;
+    --tri-fill:  rgba(217, 89, 38, 0.22);
+
+    --inside:  #3987e5;
+    --outside: #e66767;
+    --diverge-mid: #383835;
+
+    --threshold: #55565f;
+    --focus: #3987e5;
+  }
+  :root[data-theme="light"] .viz-root {
+    color-scheme: light;
+    --bg:            #f6f6f4;
+    --surface:        #ffffff;
+    --surface-sunken: #f0f0ed;
+    --border:         #e1e1dc;
+    --text-primary:   #14151a;
+    --text-secondary: #55565f;
+    --text-muted:     #86868c;
+
+    --mesh:      #2a78d6;
+    --mesh-fill: rgba(42, 120, 214, 0.16);
+    --tri:       #eb6834;
+    --tri-fill:  rgba(235, 104, 52, 0.16);
+
+    --inside:  #2a78d6;
+    --outside: #e34948;
+    --diverge-mid: #f0efec;
+
+    --threshold: #9a9a92;
+    --focus: #2a78d6;
+  }
+
+  .viz-root {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 40px 20px 64px;
+    display: flex;
+    justify-content: center;
+  }
+  .viz-page {
+    width: 100%;
+    max-width: 860px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.viz-header { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  h1 {
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .lede {
+    margin: 0;
+    max-width: 62ch;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .lede code, p code, li code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-size: 0.92em;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+
+  section.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .card h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  .card .desc {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 68ch;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12.5px; color: var(--text-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .swatch { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+  .swatch.line { height: 3px; border-radius: 2px; }
+
+  .chart-wrap { position: relative; width: 100%; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .axis-label { fill: var(--text-muted); font-size: 11px; }
+  .axis-title { fill: var(--text-secondary); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
+  .gridline { stroke: var(--border); stroke-width: 1; }
+  .threshold-line { stroke: var(--threshold); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .region-label { fill: var(--text-muted); font-size: 11.5px; }
+  .region-label.strong { fill: var(--text-secondary); font-weight: 600; }
+  .band-mesh { fill: var(--mesh-fill); }
+  .band-tri { fill: var(--tri-fill); }
+  .line-mesh { fill: none; stroke: var(--mesh); stroke-width: 2; stroke-linecap: round; }
+  .line-tri { fill: none; stroke: var(--tri); stroke-width: 2; stroke-linecap: round; }
+  .crosshair { stroke: var(--text-muted); stroke-width: 1; }
+  .hover-dot { stroke: var(--surface); stroke-width: 1.5; }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    min-width: 168px;
+    opacity: 0;
+    transition: opacity 90ms ease;
+    z-index: 5;
+  }
+  .tooltip .t-s { font-weight: 700; margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; color: var(--text-secondary); }
+  .tooltip .t-row .v { color: var(--text-primary); font-weight: 600; }
+  .tooltip .t-none { color: var(--text-muted); font-style: normal; }
+
+  .panels { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 620px) { .panels { grid-template-columns: 1fr; } }
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-sunken);
+  }
+  .panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+  .panel-title { font-size: 13px; font-weight: 700; }
+  .panel-tag {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 100px;
+  }
+  .panel-tag.agree { color: var(--inside); background: color-mix(in srgb, var(--inside) 16%, transparent); }
+  .panel-tag.disagree { color: var(--outside); background: color-mix(in srgb, var(--outside) 16%, transparent); }
+  .panel-canvas-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+  canvas.field { width: 100%; height: 100%; display: block; }
+  .corner-label {
+    position: absolute;
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 4px;
+    line-height: 1.4;
+    transform: translate(-50%, -50%);
+    white-space: nowrap;
+  }
+  .panel-readout { display: flex; flex-direction: column; gap: 3px; font-size: 12px; }
+  .readout-row { display: flex; justify-content: space-between; gap: 10px; }
+  .readout-row .k { color: var(--text-secondary); }
+  .readout-row .v { font-weight: 600; }
+  .readout-row .v.mesh-v { color: var(--mesh); }
+  .readout-row .v.tri-v { color: var(--tri); }
+
+  footer.viz-footer {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  footer.viz-footer code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+  }
+</style>
+
+<div class="viz-root">
+<div class="viz-page">
+
+  <header class="viz-header">
+    <span class="eyebrow">levelset_metrology · saddle case 5</span>
+    <h1>Where the mesh and the true surface disagree</h1>
+    <p class="lede">
+      A single level-set cell with corners 0 and 2 negative (inside, magnitude
+      <code>s</code>) and corners 1, 3 positive (outside, fixed at 1). A probe
+      line runs along the bottom-face diagonal, from corner 0 to corner 2.
+      Marching cubes always caps that saddle with two fixed triangles, one per
+      inside corner — the true trilinear-interpolated surface does something
+      different, and does it differently depending on <code>s</code>.
+    </p>
+  </header>
+
+  <section class="card">
+    <h2>Crossing position along the probe, as <span class="mono">s</span> sweeps 0.2 → 3.0</h2>
+    <p class="desc">
+      Each method reports where <em>it</em> thinks material starts and ends along the probe
+      (parametric position <span class="mono">t</span>, 0–1). Below <span class="mono">s = 1</span>
+      both methods report two crossings, but at different positions — a sizing error. At
+      <span class="mono">s = 1</span> the trilinear pair converges to a single point and vanishes:
+      above that threshold the true surface has reconnected and the probe never crosses it, while
+      the fixed mesh triangulation still reports the same two-crossing gap it always does.
+    </p>
+    <div class="legend">
+      <div class="legend-item"><span class="swatch line" style="background:var(--mesh)"></span>Mesh crossings (marching cubes, fixed triangulation)</div>
+      <div class="legend-item"><span class="swatch line" style="background:var(--tri)"></span>Trilinear crossings (true interpolated surface)</div>
+      <div class="legend-item"><span class="swatch" style="background:transparent;border:1.5px dashed var(--threshold)"></span>s = 1 (asymptotic-decider threshold)</div>
+    </div>
+    <div class="chart-wrap" id="chartWrap">
+      <svg class="chart" id="chartSvg" viewBox="0 0 820 380" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Why: the field itself changes topology</h2>
+    <p class="desc">
+      Each panel colors the true bilinear field on the probe's own face — blue where it's negative
+      (inside), red where positive (outside) — with the probe diagonal drawn across it. At
+      <span class="mono">s = 0.30</span> the two inside corners stay separate blue lobes, so the
+      diagonal still crosses zero twice, just not exactly where the mesh assumes. At
+      <span class="mono">s = 2.00</span> the two lobes have merged into one connected blue region
+      that swallows the diagonal without ever crossing zero — the mesh's two triangles are capping
+      a gap that, on the real surface, no longer exists.
+    </p>
+    <div class="panels" id="panels"></div>
+  </section>
+
+  <footer class="viz-footer">
+    Data computed directly from <code>levelset_metrology</code>'s Python bindings
+    (<code>known_cases.case5_mesh</code>, <code>find_mesh_crossings</code>,
+    <code>find_trilinear_crossings</code>), verified against
+    <code>levelset3d_polygon/analysis/saddle_intersection_analysis.cpp</code>'s reference values.
+  </footer>
+
+</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // s, mesh_lo, mesh_hi, tri_lo|null, tri_hi|null
+  const DATA = [[0.2, 0.08333333333333334, 0.9166666666666669, 0.09175170953613698, 0.9082482904638629], [0.25, 0.09999999999999998, 0.9, 0.1127016653792583, 0.8872983346207417], [0.3, 0.11538461538461539, 0.8846153846153847, 0.13310030714732857, 0.8668996928526713], [0.35, 0.12962962962962965, 0.8703703703703703, 0.15305566675564453, 0.8469443332443554], [0.4, 0.14285714285714288, 0.8571428571428571, 0.17267316464601146, 0.8273268353539887], [0.45, 0.15517241379310345, 0.8448275862068966, 0.19205911897428013, 0.8079408810257198], [0.5, 0.16666666666666666, 0.8333333333333333, 0.21132486540518713, 0.7886751345948129], [0.55, 0.1774193548387097, 0.8225806451612903, 0.23059204695983765, 0.7694079530401623], [0.6, 0.18749999999999997, 0.8125, 0.24999999999999994, 0.75], [0.65, 0.196969696969697, 0.8030303030303031, 0.2697169067640809, 0.7302830932359192], [0.7, 0.20588235294117646, 0.7941176470588235, 0.2899579873957985, 0.7100420126042015], [0.75, 0.2142857142857143, 0.7857142857142856, 0.31101776349538646, 0.6889822365046137], [0.8, 0.22222222222222224, 0.7777777777777777, 0.33333333333333337, 0.6666666666666667], [0.85, 0.22972972972972974, 0.7702702702702703, 0.3576263006371251, 0.6423736993628748], [0.9, 0.2368421052631579, 0.763157894736842, 0.3852921330647191, 0.614707866935281], [0.95, 0.24358974358974358, 0.7564102564102564, 0.4199359230974564, 0.5800640769025436], [1.0, 0.25, 0.75, 0.4999999962747097, 0.5000000037252903], [1.05, 0.25609756097560976, 0.7439024390243903, null, null], [1.1, 0.261904761904762, 0.7380952380952381, null, null], [1.15, 0.26744186046511625, 0.7325581395348836, null, null], [1.2, 0.2727272727272727, 0.7272727272727273, null, null], [1.25, 0.2777777777777778, 0.7222222222222222, null, null], [1.3, 0.2826086956521739, 0.7173913043478259, null, null], [1.35, 0.2872340425531915, 0.7127659574468085, null, null], [1.4, 0.29166666666666663, 0.7083333333333334, null, null], [1.45, 0.29591836734693877, 0.7040816326530612, null, null], [1.5, 0.3, 0.7, null, null], [1.55, 0.30392156862745096, 0.6960784313725491, null, null], [1.6, 0.30769230769230765, 0.6923076923076922, null, null], [1.65, 0.3113207547169811, 0.6886792452830188, null, null], [1.7, 0.31481481481481477, 0.6851851851851851, null, null], [1.75, 0.3181818181818182, 0.6818181818181819, null, null], [1.8, 0.3214285714285714, 0.6785714285714287, null, null], [1.85, 0.32456140350877194, 0.675438596491228, null, null], [1.9, 0.3275862068965517, 0.6724137931034482, null, null], [1.95, 0.3305084745762712, 0.6694915254237288, null, null], [2.0, 0.3333333333333333, 0.6666666666666666, null, null], [2.05, 0.3360655737704918, 0.6639344262295082, null, null], [2.1, 0.3387096774193549, 0.6612903225806452, null, null], [2.15, 0.34126984126984133, 0.6587301587301587, null, null], [2.2, 0.34375, 0.65625, null, null], [2.25, 0.3461538461538462, 0.6538461538461539, null, null], [2.3, 0.3484848484848485, 0.6515151515151515, null, null], [2.35, 0.3507462686567165, 0.6492537313432836, null, null], [2.4, 0.3529411764705882, 0.6470588235294118, null, null], [2.45, 0.35507246376811596, 0.6449275362318841, null, null], [2.5, 0.35714285714285715, 0.6428571428571429, null, null], [2.55, 0.35915492957746475, 0.6408450704225352, null, null], [2.6, 0.3611111111111111, 0.638888888888889, null, null], [2.65, 0.363013698630137, 0.6369863013698629, null, null], [2.7, 0.36486486486486486, 0.6351351351351351, null, null], [2.75, 0.3666666666666667, 0.6333333333333333, null, null], [2.8, 0.368421052631579, 0.6315789473684211, null, null], [2.85, 0.37012987012987014, 0.6298701298701298, null, null], [2.9, 0.3717948717948718, 0.6282051282051282, null, null], [2.95, 0.3734177215189874, 0.6265822784810127, null, null], [3.0, 0.375, 0.625, null, null]];
+
+  const svg = document.getElementById("chartSvg");
+  const tooltip = document.getElementById("tooltip");
+  const wrap = document.getElementById("chartWrap");
+
+  const W = 820, H = 380;
+  const M = { top: 18, right: 22, bottom: 40, left: 42 };
+  const plotW = W - M.left - M.right;
+  const plotH = H - M.top - M.bottom;
+
+  const sMin = 0.2, sMax = 3.0;
+  const xOf = (s) => M.left + ((s - sMin) / (sMax - sMin)) * plotW;
+  const yOf = (t) => M.top + (1 - t) * plotH;
+
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  // gridlines + axes
+  const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+  yTicks.forEach((t) => {
+    svg.appendChild(svgEl("line", {
+      class: "gridline", x1: M.left, x2: W - M.right, y1: yOf(t), y2: yOf(t),
+    }));
+    const lbl = svgEl("text", { class: "axis-label", x: M.left - 10, y: yOf(t) + 4, "text-anchor": "end" });
+    lbl.textContent = t.toFixed(2);
+    svg.appendChild(lbl);
+  });
+  const xTicks = [0.2, 0.5, 1.0, 1.5, 2.0, 2.5, 3.0];
+  xTicks.forEach((s) => {
+    const lbl = svgEl("text", { class: "axis-label", x: xOf(s), y: H - M.bottom + 18, "text-anchor": "middle" });
+    lbl.textContent = s.toFixed(1);
+    svg.appendChild(lbl);
+  });
+  svg.appendChild(svgEl("text", {
+    class: "axis-title", x: M.left, y: 12,
+  })).textContent = "crossing position t";
+  svg.appendChild(svgEl("text", {
+    class: "axis-title", x: W - M.right, y: H - 4, "text-anchor": "end",
+  })).textContent = "s  (inside-corner magnitude)";
+
+  // region labels
+  svg.appendChild(Object.assign(svgEl("text", {
+    class: "region-label", x: xOf(0.6), y: M.top + 16, "text-anchor": "middle",
+  }), { textContent: "positions differ (sizing error)" }));
+  const dis1 = svgEl("text", { class: "region-label strong", x: xOf(2.1), y: M.top + 16, "text-anchor": "middle" });
+  dis1.textContent = "topological disagreement";
+  svg.appendChild(dis1);
+  const dis2 = svgEl("text", { class: "region-label", x: xOf(2.1), y: M.top + 31, "text-anchor": "middle" });
+  dis2.textContent = "(trilinear: connected, no crossing)";
+  svg.appendChild(dis2);
+
+  // threshold line
+  svg.appendChild(svgEl("line", {
+    class: "threshold-line", x1: xOf(1.0), x2: xOf(1.0), y1: M.top, y2: H - M.bottom,
+  }));
+
+  function pathFor(getLo, getHi, filterFn) {
+    const pts = DATA.filter(filterFn);
+    if (pts.length < 2) return null;
+    let d = "M " + xOf(pts[0][0]) + " " + yOf(getLo(pts[0]));
+    for (let i = 1; i < pts.length; i++) d += " L " + xOf(pts[i][0]) + " " + yOf(getLo(pts[i]));
+    for (let i = pts.length - 1; i >= 0; i--) d += " L " + xOf(pts[i][0]) + " " + yOf(getHi(pts[i]));
+    d += " Z";
+    return d;
+  }
+  function linePath(getV, filterFn) {
+    const pts = DATA.filter(filterFn);
+    if (pts.length < 2) return null;
+    let d = "M " + xOf(pts[0][0]) + " " + yOf(getV(pts[0]));
+    for (let i = 1; i < pts.length; i++) d += " L " + xOf(pts[i][0]) + " " + yOf(getV(pts[i]));
+    return d;
+  }
+
+  const meshBand = pathFor((r) => r[1], (r) => r[2], () => true);
+  if (meshBand) svg.appendChild(svgEl("path", { class: "band-mesh", d: meshBand }));
+  const triBand = pathFor((r) => r[3], (r) => r[4], (r) => r[3] !== null);
+  if (triBand) svg.appendChild(svgEl("path", { class: "band-tri", d: triBand }));
+
+  [ [(r) => r[1], "line-mesh"], [(r) => r[2], "line-mesh"] ].forEach(([get, cls]) => {
+    const d = linePath(get, () => true);
+    if (d) svg.appendChild(svgEl("path", { class: cls, d }));
+  });
+  [ [(r) => r[3], "line-tri"], [(r) => r[4], "line-tri"] ].forEach(([get, cls]) => {
+    const d = linePath(get, (r) => r[3] !== null);
+    if (d) svg.appendChild(svgEl("path", { class: cls, d }));
+  });
+
+  // hover layer
+  const crosshair = svgEl("line", { class: "crosshair", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom, opacity: 0 });
+  svg.appendChild(crosshair);
+  const dots = [0, 0, 0, 0].map((_, i) => {
+    const c = svgEl("circle", { class: "hover-dot", r: 4.5, opacity: 0, fill: i < 2 ? "var(--mesh)" : "var(--tri)" });
+    svg.appendChild(c);
+    return c;
+  });
+
+  const overlay = svgEl("rect", {
+    x: M.left, y: M.top, width: plotW, height: plotH, fill: "transparent", style: "cursor:crosshair",
+  });
+  svg.appendChild(overlay);
+
+  function nearestIndex(s) {
+    let best = 0, bestDist = Infinity;
+    for (let i = 0; i < DATA.length; i++) {
+      const d = Math.abs(DATA[i][0] - s);
+      if (d < bestDist) { bestDist = d; best = i; }
+    }
+    return best;
+  }
+
+  function onMove(evt) {
+    const rect = svg.getBoundingClientRect();
+    const scale = W / rect.width;
+    const px = (evt.clientX - rect.left) * scale;
+    const s = sMin + ((px - M.left) / plotW) * (sMax - sMin);
+    const idx = nearestIndex(Math.max(sMin, Math.min(sMax, s)));
+    const row = DATA[idx];
+    const x = xOf(row[0]);
+
+    crosshair.setAttribute("x1", x); crosshair.setAttribute("x2", x); crosshair.setAttribute("opacity", 1);
+    const vals = [row[1], row[2], row[3], row[4]];
+    dots.forEach((dot, i) => {
+      if (vals[i] === null) { dot.setAttribute("opacity", 0); return; }
+      dot.setAttribute("cx", x); dot.setAttribute("cy", yOf(vals[i])); dot.setAttribute("opacity", 1);
+    });
+
+    const hasTri = row[3] !== null;
+    tooltip.innerHTML =
+      '<div class="t-s mono">s = ' + row[0].toFixed(2) + "</div>" +
+      '<div class="t-row"><span>mesh</span><span class="v mono">[' + row[1].toFixed(3) + ", " + row[2].toFixed(3) + "]</span></div>" +
+      '<div class="t-row"><span>trilinear</span><span class="v mono' + (hasTri ? "" : " t-none") + '">' +
+        (hasTri ? "[" + row[3].toFixed(3) + ", " + row[4].toFixed(3) + "]" : "connected — no crossing") +
+      "</span></div>";
+    tooltip.style.opacity = 1;
+    const wrapRect = wrap.getBoundingClientRect();
+    let left = (x / W) * wrapRect.width + 14;
+    if (left + 180 > wrapRect.width) left = (x / W) * wrapRect.width - 190;
+    tooltip.style.left = left + "px";
+    tooltip.style.top = ((yOf(vals[1]) / H) * wrapRect.height - 10) + "px";
+  }
+  overlay.addEventListener("mousemove", onMove);
+  overlay.addEventListener("mouseleave", () => {
+    crosshair.setAttribute("opacity", 0);
+    dots.forEach((d) => d.setAttribute("opacity", 0));
+    tooltip.style.opacity = 0;
+  });
+  overlay.addEventListener("touchmove", (e) => { onMove(e.touches[0]); e.preventDefault(); }, { passive: false });
+
+  // ---- field panels -----------------------------------------------------
+
+  function bilinear(s, x, y) {
+    const v0 = -s, v1 = 1, v2 = -s, v3 = 1;
+    return v0 * (1 - x) * (1 - y) + v1 * x * (1 - y) + v2 * x * y + v3 * (1 - x) * y;
+  }
+  function hexToRgb(hex) {
+    const n = parseInt(hex.replace("#", ""), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function lerpColor(a, b, t) {
+    return [0, 1, 2].map((i) => Math.round(a[i] + (b[i] - a[i]) * t));
+  }
+  function cssVar(name) {
+    return getComputedStyle(document.querySelector(".viz-root")).getPropertyValue(name).trim();
+  }
+
+  function drawPanel(canvas, s) {
+    const N = 160;
+    canvas.width = N; canvas.height = N;
+    const ctx = canvas.getContext("2d");
+    const img = ctx.createImageData(N, N);
+
+    const inside = hexToRgb(cssVar("--inside"));
+    const outside = hexToRgb(cssVar("--outside"));
+    const mid = hexToRgb(cssVar("--diverge-mid"));
+
+    for (let py = 0; py < N; py++) {
+      const y = 1 - py / (N - 1); // flip so y=1 (corner 2/3 side) is at top
+      for (let px = 0; px < N; px++) {
+        const x = px / (N - 1);
+        const v = bilinear(s, x, y);
+        let rgb;
+        if (v <= 0) rgb = lerpColor(mid, inside, Math.min(1, -v / s));
+        else rgb = lerpColor(mid, outside, Math.min(1, v / 1));
+        const idx = (py * N + px) * 4;
+        img.data[idx] = rgb[0]; img.data[idx + 1] = rgb[1]; img.data[idx + 2] = rgb[2]; img.data[idx + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+
+    // probe diagonal: (0,0) bottom-left -> (1,1) top-right, in canvas px space
+    ctx.strokeStyle = "rgba(0,0,0,0.55)";
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(0, N - 1);
+    ctx.lineTo(N - 1, 0);
+    ctx.stroke();
+  }
+
+  function toXY(t) { return [t, t]; } // along the diagonal, x=y=t
+
+  function addMarker(container, canvasSize, t, colorVar, label) {
+    const [x, y] = toXY(t);
+    const dot = document.createElement("div");
+    dot.style.position = "absolute";
+    dot.style.width = "9px";
+    dot.style.height = "9px";
+    dot.style.borderRadius = "50%";
+    dot.style.left = (x * 100) + "%";
+    dot.style.top = ((1 - y) * 100) + "%";
+    dot.style.transform = "translate(-50%,-50%)";
+    dot.style.background = "var(" + colorVar + ")";
+    dot.style.border = "1.5px solid var(--surface)";
+    dot.style.boxShadow = "0 0 0 1px var(--border)";
+    dot.title = label;
+    container.appendChild(dot);
+  }
+
+  function buildPanel(s, meshTs, triTs, tag) {
+    const panel = document.createElement("div");
+    panel.className = "panel";
+
+    const head = document.createElement("div");
+    head.className = "panel-head";
+    head.innerHTML =
+      '<span class="panel-title mono">s = ' + s.toFixed(2) + "</span>" +
+      '<span class="panel-tag ' + (tag === "agree" ? "agree" : "disagree") + '">' +
+      (tag === "agree" ? "agree, offset" : "disagree") + "</span>";
+    panel.appendChild(head);
+
+    const canvasWrap = document.createElement("div");
+    canvasWrap.className = "panel-canvas-wrap";
+    const canvas = document.createElement("canvas");
+    canvas.className = "field";
+    canvasWrap.appendChild(canvas);
+
+    // corner value labels (0 bottom-left, 1 bottom-right, 2 top-right, 3 top-left)
+    const cornerDefs = [
+      { x: 0, y: 100, text: "0: -" + s.toFixed(2) },
+      { x: 100, y: 100, text: "1: 1" },
+      { x: 100, y: 0, text: "2: -" + s.toFixed(2) },
+      { x: 0, y: 0, text: "3: 1" },
+    ];
+    cornerDefs.forEach((c) => {
+      const el = document.createElement("div");
+      el.className = "corner-label";
+      el.style.left = c.x + "%";
+      el.style.top = c.y + "%";
+      el.textContent = c.text;
+      canvasWrap.appendChild(el);
+    });
+
+    panel.appendChild(canvasWrap);
+
+    meshTs.forEach((t) => addMarker(canvasWrap, 0, t, "--mesh", "mesh crossing t=" + t.toFixed(3)));
+    triTs.forEach((t) => addMarker(canvasWrap, 0, t, "--tri", "trilinear crossing t=" + t.toFixed(3)));
+
+    const readout = document.createElement("div");
+    readout.className = "panel-readout";
+    readout.innerHTML =
+      '<div class="readout-row"><span class="k">mesh crossings</span><span class="v mesh-v mono">[' +
+        meshTs.map((v) => v.toFixed(3)).join(", ") + "]</span></div>" +
+      '<div class="readout-row"><span class="k">trilinear crossings</span><span class="v tri-v mono">' +
+        (triTs.length ? "[" + triTs.map((v) => v.toFixed(3)).join(", ") + "]" : "none (connected)") +
+      "</span></div>";
+    panel.appendChild(readout);
+
+    document.getElementById("panels").appendChild(panel);
+    requestAnimationFrame(() => drawPanel(canvas, s));
+  }
+
+  const agreeRow = DATA.find((r) => r[0] === 0.3);
+  const disagreeRow = DATA.find((r) => r[0] === 2.0);
+  buildPanel(0.3, [agreeRow[1], agreeRow[2]], [agreeRow[3], agreeRow[4]], "agree");
+  buildPanel(2.0, [disagreeRow[1], disagreeRow[2]], [], "disagree");
+})();
+</script>
