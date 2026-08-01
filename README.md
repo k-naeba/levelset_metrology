@@ -61,6 +61,15 @@ connected region above the threshold, so the probe stops crossing zero
 even though the fixed mesh triangulation still reports a gap. Open the
 file directly in a browser (it's self-contained, no server needed).
 
+A companion page,
+[`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html),
+sweeps a different variable: corner values fixed, and the diagonal probe
+line itself raised from the bottom face toward the top. Drag the slider
+to move the probe through an interactive 3D projection of the actual
+`case5_mesh` triangles, and watch the sweep chart below it -- both
+methods' crossings drift apart, then vanish together at the exact height
+where the probe exits through the shared corner vertex.
+
 A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
 edge crossings against the raw bilinear field's zero crossings, within a
 single grid cell.

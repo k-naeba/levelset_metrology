@@ -1,0 +1,699 @@
+<meta charset="utf-8">
+<title>Mesh vs. Trilinear — Probe Height Sweep</title>
+<style>
+  .viz-root {
+    color-scheme: light;
+    --bg:            #f6f6f4;
+    --surface:        #ffffff;
+    --surface-sunken: #f0f0ed;
+    --border:         #e1e1dc;
+    --text-primary:   #14151a;
+    --text-secondary: #55565f;
+    --text-muted:     #86868c;
+
+    --mesh:      #2a78d6;
+    --mesh-fill: rgba(42, 120, 214, 0.16);
+    --tri:       #eb6834;
+    --tri-fill:  rgba(235, 104, 52, 0.16);
+
+    --inside:  #2a78d6;
+    --outside: #e34948;
+    --wire: #b9b9b2;
+
+    --gap-fill: rgba(134, 134, 140, 0.12);
+    --focus: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) .viz-root {
+      color-scheme: dark;
+      --bg:            #121316;
+      --surface:        #1b1c20;
+      --surface-sunken: #202126;
+      --border:         #2c2d33;
+      --text-primary:   #f3f3f1;
+      --text-secondary: #b6b7bf;
+      --text-muted:     #797a82;
+
+      --mesh:      #3987e5;
+      --mesh-fill: rgba(57, 135, 229, 0.24);
+      --tri:       #d95926;
+      --tri-fill:  rgba(217, 89, 38, 0.24);
+
+      --inside:  #3987e5;
+      --outside: #e66767;
+      --wire: #45464d;
+
+      --gap-fill: rgba(121, 122, 130, 0.18);
+      --focus: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] .viz-root {
+    color-scheme: dark;
+    --bg:            #121316;
+    --surface:        #1b1c20;
+    --surface-sunken: #202126;
+    --border:         #2c2d33;
+    --text-primary:   #f3f3f1;
+    --text-secondary: #b6b7bf;
+    --text-muted:     #797a82;
+
+    --mesh:      #3987e5;
+    --mesh-fill: rgba(57, 135, 229, 0.24);
+    --tri:       #d95926;
+    --tri-fill:  rgba(217, 89, 38, 0.24);
+
+    --inside:  #3987e5;
+    --outside: #e66767;
+    --wire: #45464d;
+
+    --gap-fill: rgba(121, 122, 130, 0.18);
+    --focus: #3987e5;
+  }
+  :root[data-theme="light"] .viz-root {
+    color-scheme: light;
+    --bg:            #f6f6f4;
+    --surface:        #ffffff;
+    --surface-sunken: #f0f0ed;
+    --border:         #e1e1dc;
+    --text-primary:   #14151a;
+    --text-secondary: #55565f;
+    --text-muted:     #86868c;
+
+    --mesh:      #2a78d6;
+    --mesh-fill: rgba(42, 120, 214, 0.16);
+    --tri:       #eb6834;
+    --tri-fill:  rgba(235, 104, 52, 0.16);
+
+    --inside:  #2a78d6;
+    --outside: #e34948;
+    --wire: #b9b9b2;
+
+    --gap-fill: rgba(134, 134, 140, 0.12);
+    --focus: #2a78d6;
+  }
+
+  .viz-root {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    padding: 40px 20px 64px;
+    display: flex;
+    justify-content: center;
+  }
+  .viz-page {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  header.viz-header { display: flex; flex-direction: column; gap: 10px; }
+  .eyebrow {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+  }
+  h1 {
+    margin: 0;
+    font-size: 27px;
+    line-height: 1.25;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .lede {
+    margin: 0;
+    max-width: 68ch;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+  }
+  .lede code, p code, li code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-size: 0.92em;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+
+  section.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 24px 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .card h2 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.005em;
+  }
+  .card .desc {
+    margin: 0;
+    font-size: 13.5px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    max-width: 72ch;
+  }
+
+  .legend { display: flex; flex-wrap: wrap; gap: 18px; font-size: 12.5px; color: var(--text-secondary); }
+  .legend-item { display: flex; align-items: center; gap: 7px; }
+  .swatch { width: 13px; height: 13px; border-radius: 3px; flex: none; }
+
+  .probe-layout { display: grid; grid-template-columns: minmax(0, 320px) 1fr; gap: 24px; align-items: start; }
+  @media (max-width: 660px) { .probe-layout { grid-template-columns: 1fr; } }
+
+  .cube-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface-sunken);
+  }
+  svg.cube { width: 100%; height: 100%; display: block; }
+  .cube-edge { stroke: var(--wire); stroke-width: 1.3; fill: none; }
+  .cube-tri { fill: var(--mesh-fill); stroke: var(--mesh); stroke-width: 1.6; stroke-linejoin: round; }
+  .probe-seg { stroke: var(--text-primary); stroke-width: 2; stroke-linecap: round; }
+  .corner-dot { stroke: var(--surface); stroke-width: 1.2; }
+  .corner-lbl { font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace; font-size: 9.5px; fill: var(--text-secondary); }
+  .cross-marker { stroke: var(--surface); stroke-width: 1.6; }
+
+  .slider-row { display: flex; flex-direction: column; gap: 8px; }
+  .slider-row .slider-label { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--text-secondary); }
+  .slider-row input[type="range"] { width: 100%; accent-color: var(--focus); }
+
+  .readout {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 8px;
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+  }
+  .readout-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; font-size: 13px; }
+  .readout-row .k { color: var(--text-secondary); }
+  .readout-row .v { font-weight: 700; }
+  .readout-row .v.mesh-v { color: var(--mesh); }
+  .readout-row .v.tri-v { color: var(--tri); }
+  .readout-row .v.diff-v { color: var(--text-primary); }
+  .status-pill {
+    align-self: flex-start;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 100px;
+  }
+  .status-pill.differ { color: var(--outside); background: color-mix(in srgb, var(--outside) 16%, transparent); }
+  .status-pill.agree { color: var(--inside); background: color-mix(in srgb, var(--inside) 16%, transparent); }
+  .status-pill.none { color: var(--text-muted); background: var(--border); }
+
+  .chart-wrap { position: relative; width: 100%; }
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .axis-label { fill: var(--text-muted); font-size: 11px; }
+  .axis-title { fill: var(--text-secondary); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
+  .gridline { stroke: var(--border); stroke-width: 1; }
+  .gap-band { fill: var(--gap-fill); }
+  .coincide-line { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .region-label { fill: var(--text-muted); font-size: 11px; }
+  .line-mesh { fill: none; stroke: var(--mesh); stroke-width: 2; stroke-linecap: round; }
+  .line-tri { fill: none; stroke: var(--tri); stroke-width: 2; stroke-linecap: round; }
+  .crosshair { stroke: var(--text-muted); stroke-width: 1; }
+  .hover-dot { stroke: var(--surface); stroke-width: 1.5; }
+  .slider-marker { stroke: var(--focus); stroke-width: 1.5; opacity: 0.55; }
+
+  .tooltip {
+    position: absolute;
+    pointer-events: none;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    line-height: 1.55;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    min-width: 168px;
+    opacity: 0;
+    transition: opacity 90ms ease;
+    z-index: 5;
+  }
+  .tooltip .t-z { font-weight: 700; margin-bottom: 4px; }
+  .tooltip .t-row { display: flex; justify-content: space-between; gap: 14px; color: var(--text-secondary); }
+  .tooltip .t-row .v { color: var(--text-primary); font-weight: 600; }
+  .tooltip .t-none { color: var(--text-muted); font-style: normal; }
+
+  footer.viz-footer {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+  }
+  footer.viz-footer code {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+  }
+</style>
+
+<div class="viz-root">
+<div class="viz-page">
+
+  <header class="viz-header">
+    <span class="eyebrow">levelset3d_polygon &middot; single cube &middot; case 5</span>
+    <h1>Raising the probe line through the cube</h1>
+    <p class="lede">
+      The same case-5 cube as before (corners 0, 2 negative, <code>v = -0.3</code>, inside; corners
+      1, 3 positive, <code>v = +1</code>; the whole top face, corners 4&ndash;7, fixed at
+      <code>+1</code>, outside). Instead of sweeping the corner magnitude, this time the corner
+      values stay fixed and the probe line itself moves: a diagonal segment from
+      <code>(0,0,z)</code> to <code>(1,1,z)</code>, with height <code>z</code> sweeping from the
+      bottom face up toward the top. Both the mesh (the real two-triangle
+      <code>case5_mesh</code>) and the raw trilinear field vanish at exactly the same height &mdash;
+      but take different paths in <code>x</code> to get there.
+    </p>
+  </header>
+
+  <section class="card">
+    <h2>Move the probe height</h2>
+    <p class="desc">
+      Drag the slider to raise the probe from the bottom face (<code>z = 0</code>) toward the point
+      where it exits the saddle's influence. Blue is the mesh's actual two triangles (each capping
+      one inside corner, using its vertical edge crossing); the field itself isn't drawn in 3D here,
+      only where each method says the probe crosses it.
+    </p>
+    <div class="legend">
+      <div class="legend-item"><span class="swatch" style="background:var(--mesh)"></span>Mesh crossing (case5_mesh, real triangles)</div>
+      <div class="legend-item"><span class="swatch" style="background:var(--tri)"></span>Trilinear crossing (true interpolated field)</div>
+    </div>
+    <div class="probe-layout">
+      <div class="cube-wrap" id="cubeWrap">
+        <svg class="cube" id="cubeSvg" viewBox="0 0 320 320"></svg>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:16px;">
+        <div class="slider-row">
+          <div class="slider-label"><span>probe height <span class="mono" id="zLabel">z = 0.00</span></span><span>0 &rarr; 0.30</span></div>
+          <input type="range" id="zSlider" min="0" max="0.30" step="0.0015" value="0.02" />
+        </div>
+        <div class="readout" id="readout"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>Crossing position as the probe rises</h2>
+    <p class="desc">
+      Both curves come straight from <code>find_mesh_crossings</code> / <code>find_trilinear_crossings</code>
+      (dense-sample + bisection, same as the corner-magnitude sweep) &mdash; only now the swept
+      variable is the probe's height <code>z</code> instead of the corner value <code>s</code>. The
+      mesh's crossing bracket is consistently wider than the true field's at every height: the mesh
+      always reports slightly more "gap" than actually exists. Both vanish together at
+      <code class="mono">z* = s / (1 + s) &asymp; 0.231</code> &mdash; the height where the probe
+      exits precisely at the shared corner vertices, the one point every method has to agree on.
+    </p>
+    <div class="chart-wrap" id="chartWrap">
+      <svg class="chart" id="chartSvg" viewBox="0 0 860 410" preserveAspectRatio="xMidYMid meet"></svg>
+      <div class="tooltip" id="tooltip"></div>
+    </div>
+  </section>
+
+  <footer class="viz-footer">
+    Corner values, triangle construction (<code>known_cases.case5_mesh</code>), and both crossing
+    functions are exactly <code>levelset_metrology</code>'s Python bindings; the height threshold
+    <code>z* = s/(1+s)</code> is the trilinear value at the shared corner (edge 0&ndash;4's own
+    zero-crossing), verified numerically against the bindings before this page was built.
+  </footer>
+
+</div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  const S = 0.3;
+  const V = [-S, 1, -S, 1, 1, 1, 1, 1];
+  const CORNER_OFFSET = [
+    [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
+    [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1],
+  ];
+  const EDGES = [
+    [0, 1], [1, 2], [2, 3], [3, 0],
+    [4, 5], [5, 6], [6, 7], [7, 4],
+    [0, 4], [1, 5], [2, 6], [3, 7],
+  ];
+
+  function trilinear(x, y, z) {
+    let r = 0;
+    for (let c = 0; c < 8; c++) {
+      const o = CORNER_OFFSET[c];
+      const wx = o[0] ? x : 1 - x;
+      const wy = o[1] ? y : 1 - y;
+      const wz = o[2] ? z : 1 - z;
+      r += V[c] * wx * wy * wz;
+    }
+    return r;
+  }
+  function edgePoint(a, b) {
+    const va = V[a], vb = V[b];
+    const t = va / (va - vb);
+    const pa = CORNER_OFFSET[a], pb = CORNER_OFFSET[b];
+    return [pa[0] + t * (pb[0] - pa[0]), pa[1] + t * (pb[1] - pa[1]), pa[2] + t * (pb[2] - pa[2])];
+  }
+  const P_E0 = edgePoint(0, 1), P_E3 = edgePoint(3, 0), P_E8 = edgePoint(0, 4);
+  const P_E1 = edgePoint(1, 2), P_E10 = edgePoint(2, 6), P_E2 = edgePoint(2, 3);
+  const TRIANGLES = [[P_E0, P_E3, P_E8], [P_E1, P_E10, P_E2]];
+
+  function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
+  function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
+  function dot(a, b) { return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]; }
+
+  function rayTriangleIntersect(origin, dir, a, b, c) {
+    const EPS = 1e-9;
+    const e1 = sub(b, a), e2 = sub(c, a);
+    const h = cross(dir, e2);
+    const det = dot(e1, h);
+    if (Math.abs(det) < EPS) return null;
+    const f = 1 / det;
+    const s = sub(origin, a);
+    const u = f * dot(s, h);
+    if (u < 0 || u > 1) return null;
+    const q = cross(s, e1);
+    const v = f * dot(dir, q);
+    if (v < 0 || u + v > 1) return null;
+    const t = f * dot(e2, q);
+    if (t < -EPS || t > 1 + EPS) return null;
+    return t;
+  }
+  function meshCrossings(z0) {
+    const origin = [0, 0, z0], dir = [1, 1, 0];
+    const out = [];
+    for (const [a, b, c] of TRIANGLES) {
+      const t = rayTriangleIntersect(origin, dir, a, b, c);
+      if (t !== null) out.push(Math.max(0, Math.min(1, t)));
+    }
+    return out.sort((p, q) => p - q);
+  }
+  function trilinearCrossings(z0, samples) {
+    samples = samples || 2000;
+    const f = (t) => trilinear(t, t, z0);
+    const roots = [];
+    let prevT = 0, prevF = f(0);
+    for (let i = 1; i <= samples; i++) {
+      const t = i / samples;
+      const fv = f(t);
+      if ((prevF < 0) !== (fv < 0)) {
+        let lo = prevT, hi = t, flo = prevF;
+        for (let iter = 0; iter < 50; iter++) {
+          const mid = 0.5 * (lo + hi);
+          const fm = f(mid);
+          if ((fm < 0) === (flo < 0)) { lo = mid; flo = fm; } else { hi = mid; }
+        }
+        roots.push(0.5 * (lo + hi));
+      }
+      prevT = t; prevF = fv;
+    }
+    return roots;
+  }
+  const Z_STAR = S / (1 + S);
+
+  // ---- 3D cube projection ----------------------------------------------
+
+  const YAW = -35 * Math.PI / 180, PITCH = 20 * Math.PI / 180;
+  function project(p) {
+    let x = p[0] - 0.5, y = p[1] - 0.5, z = p[2] - 0.5;
+    const x1 = x * Math.cos(YAW) + z * Math.sin(YAW);
+    const z1 = -x * Math.sin(YAW) + z * Math.cos(YAW);
+    const y1 = y;
+    const y2 = y1 * Math.cos(PITCH) - z1 * Math.sin(PITCH);
+    return [x1, y2];
+  }
+  const SCALE = 190, CX = 160, CY = 178;
+  function toScreen(p) {
+    const [px, py] = project(p);
+    return [CX + px * SCALE, CY - py * SCALE];
+  }
+
+  const cubeSvg = document.getElementById("cubeSvg");
+  function svgEl(tag, attrs) {
+    const el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (const k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  for (const [a, b] of EDGES) {
+    const [x1, y1] = toScreen(CORNER_OFFSET[a]);
+    const [x2, y2] = toScreen(CORNER_OFFSET[b]);
+    cubeSvg.appendChild(svgEl("line", { class: "cube-edge", x1, y1, x2, y2 }));
+  }
+  for (const tri of TRIANGLES) {
+    const pts = tri.map((p) => toScreen(p).join(",")).join(" ");
+    cubeSvg.appendChild(svgEl("polygon", { class: "cube-tri", points: pts }));
+  }
+  const cornerLabelDefs = [
+    { c: 0, text: "0: " + (-S).toFixed(1) }, { c: 1, text: "1: 1" },
+    { c: 2, text: "2: " + (-S).toFixed(1) }, { c: 3, text: "3: 1" },
+  ];
+  cornerLabelDefs.forEach(({ c, text }) => {
+    const [x, y] = toScreen(CORNER_OFFSET[c]);
+    cubeSvg.appendChild(svgEl("circle", {
+      class: "corner-dot", cx: x, cy: y, r: 4,
+      fill: V[c] < 0 ? "var(--inside)" : "var(--outside)",
+    }));
+    const dx = CORNER_OFFSET[c][0] < 0.5 ? -8 : 8;
+    const dy = CORNER_OFFSET[c][1] < 0.5 ? 12 : -8;
+    const lbl = svgEl("text", {
+      class: "corner-lbl", x: x + dx, y: y + dy,
+      "text-anchor": CORNER_OFFSET[c][0] < 0.5 ? "end" : "start",
+    });
+    lbl.textContent = text;
+    cubeSvg.appendChild(lbl);
+  });
+  [4, 5, 6, 7].forEach((c) => {
+    const [x, y] = toScreen(CORNER_OFFSET[c]);
+    cubeSvg.appendChild(svgEl("circle", { class: "corner-dot", cx: x, cy: y, r: 3.5, fill: "var(--outside)" }));
+  });
+
+  const probeLine = svgEl("line", { class: "probe-seg" });
+  cubeSvg.appendChild(probeLine);
+  const markerEls = [0, 1, 2, 3].map(() => {
+    const el = svgEl("circle", { class: "cross-marker", r: 5, opacity: 0 });
+    cubeSvg.appendChild(el);
+    return el;
+  });
+
+  // ---- controls ----------------------------------------------------
+
+  const zSlider = document.getElementById("zSlider");
+  const zLabel = document.getElementById("zLabel");
+  const readout = document.getElementById("readout");
+
+  function fmt(x) { return x.toFixed(4); }
+
+  function updateProbe() {
+    const z0 = parseFloat(zSlider.value);
+    zLabel.textContent = "z = " + z0.toFixed(3);
+
+    const [sx, sy] = toScreen([0, 0, z0]);
+    const [ex, ey] = toScreen([1, 1, z0]);
+    probeLine.setAttribute("x1", sx); probeLine.setAttribute("y1", sy);
+    probeLine.setAttribute("x2", ex); probeLine.setAttribute("y2", ey);
+
+    const meshTs = meshCrossings(z0);
+    const triTs = trilinearCrossings(z0);
+    let mi = 0;
+    meshTs.forEach((t) => {
+      const [x, y] = toScreen([t, t, z0]);
+      const m = markerEls[mi++];
+      m.setAttribute("cx", x); m.setAttribute("cy", y);
+      m.setAttribute("fill", "var(--mesh)"); m.setAttribute("opacity", 1);
+    });
+    triTs.forEach((t) => {
+      const [x, y] = toScreen([t, t, z0]);
+      const m = markerEls[mi++];
+      m.setAttribute("cx", x); m.setAttribute("cy", y);
+      m.setAttribute("fill", "var(--tri)"); m.setAttribute("opacity", 1);
+    });
+    for (let i = mi; i < markerEls.length; i++) markerEls[i].setAttribute("opacity", 0);
+
+    let statusHtml, statusClass;
+    if (meshTs.length === 0 && triTs.length === 0) {
+      statusHtml = "no crossing (both)"; statusClass = "none";
+    } else if (meshTs.length === triTs.length && meshTs.length > 0) {
+      const diffs = meshTs.map((t, i) => Math.abs(t - triTs[i]));
+      const maxDiff = Math.max(...diffs);
+      statusHtml = maxDiff < 0.0008 ? "coincide exactly" : "positions differ";
+      statusClass = maxDiff < 0.0008 ? "agree" : "differ";
+    } else {
+      statusHtml = "different crossing count"; statusClass = "differ";
+    }
+
+    readout.innerHTML =
+      '<span class="status-pill ' + statusClass + '">' + statusHtml + "</span>" +
+      '<div class="readout-row"><span class="k">mesh crossings</span><span class="v mesh-v mono">' +
+        (meshTs.length ? "[" + meshTs.map(fmt).join(", ") + "]" : "none") + "</span></div>" +
+      '<div class="readout-row"><span class="k">trilinear crossings</span><span class="v tri-v mono">' +
+        (triTs.length ? "[" + triTs.map(fmt).join(", ") + "]" : "none") + "</span></div>" +
+      (meshTs.length === triTs.length && meshTs.length > 0
+        ? '<div class="readout-row"><span class="k">max position gap</span><span class="v diff-v mono">' +
+          fmt(Math.max(...meshTs.map((t, i) => Math.abs(t - triTs[i])))) + "</span></div>"
+        : "");
+
+    updateChartMarker(z0);
+  }
+  zSlider.addEventListener("input", updateProbe);
+
+  // ---- sweep chart ----------------------------------------------------
+
+  const svg = document.getElementById("chartSvg");
+  const tooltip = document.getElementById("tooltip");
+  const wrap = document.getElementById("chartWrap");
+
+  const W = 860, H = 410;
+  const M = { top: 18, right: 22, bottom: 62, left: 64 };
+  const plotW = W - M.left - M.right;
+  const plotH = H - M.top - M.bottom;
+  const zMax = 0.30;
+  const xOf = (z0) => M.left + (z0 / zMax) * plotW;
+  const yOf = (t) => M.top + (1 - t) * plotH;
+
+  const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+  yTicks.forEach((t) => {
+    svg.appendChild(svgEl("line", { class: "gridline", x1: M.left, x2: W - M.right, y1: yOf(t), y2: yOf(t) }));
+    const lbl = svgEl("text", { class: "axis-label", x: M.left - 10, y: yOf(t) + 4, "text-anchor": "end" });
+    lbl.textContent = t.toFixed(2);
+    svg.appendChild(lbl);
+  });
+  const xTicks = [0, 0.05, 0.10, 0.15, 0.20, Z_STAR, 0.25, 0.30];
+  xTicks.forEach((z0) => {
+    const lbl = svgEl("text", { class: "axis-label", x: xOf(z0), y: H - M.bottom + 18, "text-anchor": "middle" });
+    lbl.textContent = z0.toFixed(2);
+    svg.appendChild(lbl);
+  });
+
+  const yAxisTitle = svgEl("text", {
+    class: "axis-title", x: 0, y: 0, "text-anchor": "middle",
+    transform: "translate(16, " + (M.top + plotH / 2) + ") rotate(-90)",
+  });
+  yAxisTitle.textContent = "vertical axis: crossing position t";
+  svg.appendChild(yAxisTitle);
+  const xAxisTitle = svgEl("text", { class: "axis-title", x: M.left + plotW / 2, y: H - 8, "text-anchor": "middle" });
+  xAxisTitle.textContent = "horizontal axis: probe height z";
+  svg.appendChild(xAxisTitle);
+
+  svg.appendChild(svgEl("rect", {
+    class: "gap-band", x: xOf(Z_STAR), y: M.top, width: (W - M.right) - xOf(Z_STAR), height: plotH,
+  }));
+  const gapLabel = svgEl("text", { class: "region-label", x: (xOf(Z_STAR) + (W - M.right)) / 2, y: M.top + 16, "text-anchor": "middle" });
+  gapLabel.textContent = "no crossing (either method)";
+  svg.appendChild(gapLabel);
+  svg.appendChild(svgEl("line", { class: "coincide-line", x1: xOf(Z_STAR), x2: xOf(Z_STAR), y1: M.top, y2: H - M.bottom }));
+  const starLabel = svgEl("text", { class: "region-label", x: xOf(Z_STAR), y: H - M.bottom + 34, "text-anchor": "middle" });
+  starLabel.textContent = "z*";
+  svg.appendChild(starLabel);
+
+  const N_SAMPLES = 200;
+  function buildCurve(getTs, branch) {
+    const pts = [];
+    for (let i = 0; i <= N_SAMPLES; i++) {
+      const z0 = (i / N_SAMPLES) * zMax;
+      const ts = getTs(z0);
+      let t = null;
+      if (branch === "lower" && ts.length) t = ts[0];
+      if (branch === "upper" && ts.length) t = ts[ts.length - 1];
+      pts.push([z0, t]);
+    }
+    return pts;
+  }
+  function pathFromPts(pts) {
+    let d = "", drawing = false;
+    for (const [z0, t] of pts) {
+      if (t === null) { drawing = false; continue; }
+      d += (drawing ? " L " : " M ") + xOf(z0) + " " + yOf(t);
+      drawing = true;
+    }
+    return d;
+  }
+  const meshLower = buildCurve((z0) => meshCrossings(z0), "lower");
+  const meshUpper = buildCurve((z0) => meshCrossings(z0), "upper");
+  const triLower = buildCurve((z0) => trilinearCrossings(z0), "lower");
+  const triUpper = buildCurve((z0) => trilinearCrossings(z0), "upper");
+  svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshLower) }));
+  svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshUpper) }));
+  svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triLower) }));
+  svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triUpper) }));
+
+  const sliderMarker = svgEl("line", { class: "slider-marker", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom });
+  svg.appendChild(sliderMarker);
+  function updateChartMarker(z0) {
+    const x = xOf(z0);
+    sliderMarker.setAttribute("x1", x);
+    sliderMarker.setAttribute("x2", x);
+  }
+
+  const crosshair = svgEl("line", { class: "crosshair", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom, opacity: 0 });
+  svg.appendChild(crosshair);
+  const dots = [0, 1, 2, 3].map((i) => {
+    const c = svgEl("circle", { class: "hover-dot", r: 4.5, opacity: 0, fill: i < 2 ? "var(--mesh)" : "var(--tri)" });
+    svg.appendChild(c);
+    return c;
+  });
+
+  const overlay = svgEl("rect", { x: M.left, y: M.top, width: plotW, height: plotH, fill: "transparent", style: "cursor:crosshair" });
+  svg.appendChild(overlay);
+
+  function onMove(evt) {
+    const rect = svg.getBoundingClientRect();
+    const scale = W / rect.width;
+    const px = (evt.clientX - rect.left) * scale;
+    const z0 = Math.max(0, Math.min(zMax, ((px - M.left) / plotW) * zMax));
+    const x = xOf(z0);
+
+    crosshair.setAttribute("x1", x); crosshair.setAttribute("x2", x); crosshair.setAttribute("opacity", 1);
+    const meshTs = meshCrossings(z0);
+    const triTs = trilinearCrossings(z0);
+    const vals = [meshTs[0], meshTs[1], triTs[0], triTs[1]];
+    dots.forEach((dot, i) => {
+      if (vals[i] === undefined) { dot.setAttribute("opacity", 0); return; }
+      dot.setAttribute("cx", x); dot.setAttribute("cy", yOf(vals[i])); dot.setAttribute("opacity", 1);
+    });
+
+    tooltip.innerHTML =
+      '<div class="t-z mono">z = ' + z0.toFixed(3) + "</div>" +
+      '<div class="t-row"><span>mesh</span><span class="v mono' + (meshTs.length ? "" : " t-none") + '">' +
+        (meshTs.length ? "[" + meshTs.map((v) => v.toFixed(3)).join(", ") + "]" : "none") + "</span></div>" +
+      '<div class="t-row"><span>trilinear</span><span class="v mono' + (triTs.length ? "" : " t-none") + '">' +
+        (triTs.length ? "[" + triTs.map((v) => v.toFixed(3)).join(", ") + "]" : "none") + "</span></div>";
+    tooltip.style.opacity = 1;
+    const wrapRect = wrap.getBoundingClientRect();
+    let left = (x / W) * wrapRect.width + 14;
+    if (left + 180 > wrapRect.width) left = (x / W) * wrapRect.width - 190;
+    tooltip.style.left = left + "px";
+    tooltip.style.top = "10px";
+
+    zSlider.value = z0;
+    updateProbe();
+  }
+  overlay.addEventListener("mousemove", onMove);
+  overlay.addEventListener("mouseleave", () => {
+    crosshair.setAttribute("opacity", 0);
+    dots.forEach((d) => d.setAttribute("opacity", 0));
+    tooltip.style.opacity = 0;
+  });
+  overlay.addEventListener("touchmove", (e) => { onMove(e.touches[0]); e.preventDefault(); }, { passive: false });
+
+  updateProbe();
+})();
+</script>
