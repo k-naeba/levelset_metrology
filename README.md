@@ -61,8 +61,17 @@ connected region above the threshold, so the probe stops crossing zero
 even though the fixed mesh triangulation still reports a gap. Open the
 file directly in a browser (it's self-contained, no server needed).
 
-A 2D analog (`Polygon2d` edge crossings + bilinear interpolation) doesn't
-exist yet; add it here, alongside these, whenever a 2D use case shows up.
+A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
+edge crossings against the raw bilinear field's zero crossings, within a
+single grid cell.
+[`docs/polygon_vs_bilinear_probe.html`](docs/polygon_vs_bilinear_probe.html)
+visualizes it: drag a horizontal probe line across the cell and watch the
+two methods' crossing positions pull apart, then a chart of that same
+crossing position swept continuously across the full probe range. Unlike
+the 3D case, `levelset2d_polygon`'s marching squares resolves the saddle
+ambiguity correctly (via the true cell-center value), so here the two
+methods only disagree on *where* the crossing is, never on *whether* one
+exists.
 
 ## Python bindings
 
