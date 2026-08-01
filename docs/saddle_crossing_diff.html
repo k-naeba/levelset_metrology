@@ -230,6 +230,44 @@
   }
   .panel-tag.agree { color: var(--inside); background: color-mix(in srgb, var(--inside) 16%, transparent); }
   .panel-tag.disagree { color: var(--outside); background: color-mix(in srgb, var(--outside) 16%, transparent); }
+  .panel-plot {
+    display: grid;
+    grid-template-columns: 22px 1fr;
+    column-gap: 7px;
+  }
+  .panel-yaxis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+  }
+  .panel-yaxis .axis-caption {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+  }
+  .axis-tick {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .panel-xaxis {
+    grid-column: 2;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 2px 0;
+  }
+  .panel-xaxis .axis-caption {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    color: var(--text-secondary);
+  }
   .panel-canvas-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
   canvas.field { width: 100%; height: 100%; display: block; }
   .corner-label {
@@ -297,7 +335,7 @@
       <div class="legend-item"><span class="swatch" style="background:transparent;border:1.5px dashed var(--threshold)"></span>s = 1 (asymptotic-decider threshold)</div>
     </div>
     <div class="chart-wrap" id="chartWrap">
-      <svg class="chart" id="chartSvg" viewBox="0 0 820 380" preserveAspectRatio="xMidYMid meet"></svg>
+      <svg class="chart" id="chartSvg" viewBox="0 0 820 410" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="tooltip" id="tooltip"></div>
     </div>
   </section>
@@ -306,7 +344,10 @@
     <h2>Why: the field itself changes topology</h2>
     <p class="desc">
       Each panel colors the true bilinear field on the probe's own face — blue where it's negative
-      (inside), red where positive (outside) — with the probe diagonal drawn across it. At
+      (inside), red where positive (outside) — with the probe diagonal drawn across it. Both axes
+      are the face's own local coordinates, 0 to 1: <span class="mono">x</span> runs corner 0 →
+      corner 1, <span class="mono">y</span> runs corner 0 → corner 3; the probe itself is the
+      diagonal <span class="mono">x = y = t</span>, from corner 0 to corner 2. At
       <span class="mono">s = 0.30</span> the two inside corners stay separate blue lobes, so the
       diagonal still crosses zero twice, just not exactly where the mesh assumes. At
       <span class="mono">s = 2.00</span> the two lobes have merged into one connected blue region
@@ -337,8 +378,8 @@
   const tooltip = document.getElementById("tooltip");
   const wrap = document.getElementById("chartWrap");
 
-  const W = 820, H = 380;
-  const M = { top: 18, right: 22, bottom: 40, left: 42 };
+  const W = 820, H = 410;
+  const M = { top: 18, right: 22, bottom: 62, left: 64 };
   const plotW = W - M.left - M.right;
   const plotH = H - M.top - M.bottom;
 
@@ -368,12 +409,19 @@
     lbl.textContent = s.toFixed(1);
     svg.appendChild(lbl);
   });
-  svg.appendChild(svgEl("text", {
-    class: "axis-title", x: M.left, y: 12,
-  })).textContent = "crossing position t";
-  svg.appendChild(svgEl("text", {
-    class: "axis-title", x: W - M.right, y: H - 4, "text-anchor": "end",
-  })).textContent = "s  (inside-corner magnitude)";
+  // y-axis title, rotated alongside the axis
+  const yAxisTitle = svgEl("text", {
+    class: "axis-title", x: 0, y: 0, "text-anchor": "middle",
+    transform: "translate(16, " + (M.top + plotH / 2) + ") rotate(-90)",
+  });
+  yAxisTitle.textContent = "vertical axis: crossing position t";
+  svg.appendChild(yAxisTitle);
+  // x-axis title, centered under the tick labels
+  const xAxisTitle = svgEl("text", {
+    class: "axis-title", x: M.left + plotW / 2, y: H - 8, "text-anchor": "middle",
+  });
+  xAxisTitle.textContent = "horizontal axis: s (magnitude of the two inside corners)";
+  svg.appendChild(xAxisTitle);
 
   // region labels
   svg.appendChild(Object.assign(svgEl("text", {
@@ -564,6 +612,17 @@
       (tag === "agree" ? "agree, offset" : "disagree") + "</span>";
     panel.appendChild(head);
 
+    const plot = document.createElement("div");
+    plot.className = "panel-plot";
+
+    const yAxis = document.createElement("div");
+    yAxis.className = "panel-yaxis";
+    yAxis.innerHTML =
+      '<span class="axis-tick">1</span>' +
+      '<span class="axis-caption">vertical axis: y</span>' +
+      '<span class="axis-tick">0</span>';
+    plot.appendChild(yAxis);
+
     const canvasWrap = document.createElement("div");
     canvasWrap.className = "panel-canvas-wrap";
     const canvas = document.createElement("canvas");
@@ -586,7 +645,16 @@
       canvasWrap.appendChild(el);
     });
 
-    panel.appendChild(canvasWrap);
+    plot.appendChild(canvasWrap);
+    panel.appendChild(plot);
+
+    const xAxis = document.createElement("div");
+    xAxis.className = "panel-xaxis";
+    xAxis.innerHTML =
+      '<span class="axis-tick">0</span>' +
+      '<span class="axis-caption">horizontal axis: x</span>' +
+      '<span class="axis-tick">1</span>';
+    panel.appendChild(xAxis);
 
     meshTs.forEach((t) => addMarker(canvasWrap, 0, t, "--mesh", "mesh crossing t=" + t.toFixed(3)));
     triTs.forEach((t) => addMarker(canvasWrap, 0, t, "--tri", "trilinear crossing t=" + t.toFixed(3)));
