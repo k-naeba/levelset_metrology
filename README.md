@@ -53,16 +53,17 @@ for the actual findings (a real, quantified topology disagreement at the
 classic face-saddle ambiguity).
 
 [`docs/saddle_crossing_diff.html`](docs/saddle_crossing_diff.html)
+([**view live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html))
 visualizes that disagreement: crossing position vs. the inside-corner
 magnitude `s` across the full sweep, plus two field heatmaps (`s =
 0.30`, agreeing but offset; `s = 2.00`, disagreeing) showing why -- the
 two negative lobes at the saddle's inside corners merge into one
 connected region above the threshold, so the probe stops crossing zero
-even though the fixed mesh triangulation still reports a gap. Open the
-file directly in a browser (it's self-contained, no server needed).
+even though the fixed mesh triangulation still reports a gap.
 
 A companion page,
-[`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html),
+[`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html)
+([**view live**](https://k-naeba.github.io/levelset_metrology/mesh_vs_trilinear_probe_height.html)),
 sweeps a different variable: corner values fixed, and the diagonal probe
 line itself raised from the bottom face toward the top. Drag the height
 slider to move the probe through an interactive 3D projection of the
@@ -79,6 +80,7 @@ A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
 edge crossings against the raw bilinear field's zero crossings, within a
 single grid cell.
 [`docs/polygon_vs_bilinear_probe.html`](docs/polygon_vs_bilinear_probe.html)
+([**view live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html))
 visualizes it: drag a horizontal probe line across the cell and watch the
 two methods' crossing positions pull apart, then a chart of that same
 crossing position swept continuously across the full probe range. Unlike
@@ -86,6 +88,11 @@ the 3D case, `levelset2d_polygon`'s marching squares resolves the saddle
 ambiguity correctly (via the true cell-center value), so here the two
 methods only disagree on *where* the crossing is, never on *whether* one
 exists.
+
+All three pages are self-contained (no build step, no server) and served
+directly from this repo's `docs/` folder via
+[GitHub Pages](https://k-naeba.github.io/levelset_metrology/); they also
+still work if you just open the file locally in a browser.
 
 ## Python bindings
 
