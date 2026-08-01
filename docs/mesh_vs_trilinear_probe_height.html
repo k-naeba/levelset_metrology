@@ -21,6 +21,7 @@
     --wire: #b9b9b2;
 
     --gap-fill: rgba(134, 134, 140, 0.12);
+    --disagree-fill: rgba(227, 73, 72, 0.14);
     --focus: #2a78d6;
   }
   @media (prefers-color-scheme: dark) {
@@ -44,6 +45,7 @@
       --wire: #45464d;
 
       --gap-fill: rgba(121, 122, 130, 0.18);
+      --disagree-fill: rgba(230, 103, 103, 0.16);
       --focus: #3987e5;
     }
   }
@@ -67,6 +69,7 @@
     --wire: #45464d;
 
     --gap-fill: rgba(121, 122, 130, 0.18);
+    --disagree-fill: rgba(230, 103, 103, 0.16);
     --focus: #3987e5;
   }
   :root[data-theme="light"] .viz-root {
@@ -89,6 +92,7 @@
     --wire: #b9b9b2;
 
     --gap-fill: rgba(134, 134, 140, 0.12);
+    --disagree-fill: rgba(227, 73, 72, 0.14);
     --focus: #2a78d6;
   }
 
@@ -219,6 +223,7 @@
     border-radius: 100px;
   }
   .status-pill.differ { color: var(--outside); background: color-mix(in srgb, var(--outside) 16%, transparent); }
+  .status-pill.critical { color: var(--outside); background: color-mix(in srgb, var(--outside) 24%, transparent); }
   .status-pill.agree { color: var(--inside); background: color-mix(in srgb, var(--inside) 16%, transparent); }
   .status-pill.none { color: var(--text-muted); background: var(--border); }
 
@@ -228,8 +233,11 @@
   .axis-title { fill: var(--text-secondary); font-size: 11.5px; font-weight: 600; letter-spacing: 0.02em; }
   .gridline { stroke: var(--border); stroke-width: 1; }
   .gap-band { fill: var(--gap-fill); }
+  .disagree-band { fill: var(--disagree-fill); }
   .coincide-line { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
+  .disagree-line { stroke: var(--outside); stroke-width: 1.5; stroke-dasharray: 4 4; }
   .region-label { fill: var(--text-muted); font-size: 11px; }
+  .region-label.critical { fill: var(--outside); font-weight: 600; }
   .line-mesh { fill: none; stroke: var(--mesh); stroke-width: 2; stroke-linecap: round; }
   .line-tri { fill: none; stroke: var(--tri); stroke-width: 2; stroke-linecap: round; }
   .crosshair { stroke: var(--text-muted); stroke-width: 1; }
@@ -275,24 +283,22 @@
     <span class="eyebrow">levelset3d_polygon &middot; single cube &middot; case 5</span>
     <h1>Raising the probe line through the cube</h1>
     <p class="lede">
-      The same case-5 cube as before (corners 0, 2 negative, <code>v = -0.3</code>, inside; corners
-      1, 3 positive, <code>v = +1</code>; the whole top face, corners 4&ndash;7, fixed at
-      <code>+1</code>, outside). Instead of sweeping the corner magnitude, this time the corner
-      values stay fixed and the probe line itself moves: a diagonal segment from
-      <code>(0,0,z)</code> to <code>(1,1,z)</code>, with height <code>z</code> sweeping from the
-      bottom face up toward the top. Both the mesh (the real two-triangle
-      <code>case5_mesh</code>) and the raw trilinear field vanish at exactly the same height &mdash;
-      but take different paths in <code>x</code> to get there.
+      The same case-5 cube as before (corners 0, 2 negative, inside; corners 1, 3 positive, outside;
+      the whole top face, corners 4&ndash;7, fixed at <code>+1</code>, outside). Corner values stay
+      fixed while the probe line itself moves: a diagonal segment from <code>(0,0,z)</code> to
+      <code>(1,1,z)</code>, with height <code>z</code> sweeping from the bottom face up toward the
+      top. Drag <code>s</code> above 1 and a third regime appears near the bottom: not just a
+      position mismatch, but a real disagreement over <em>whether a crossing exists at all</em>.
     </p>
   </header>
 
   <section class="card">
-    <h2>Move the probe height</h2>
+    <h2>Move the probe height and the corner magnitude</h2>
     <p class="desc">
-      Drag the slider to raise the probe from the bottom face (<code>z = 0</code>) toward the point
-      where it exits the saddle's influence. Blue is the mesh's actual two triangles (each capping
-      one inside corner, using its vertical edge crossing); the field itself isn't drawn in 3D here,
-      only where each method says the probe crosses it.
+      Raise the probe from the bottom face (<code>z = 0</code>) toward the point where it exits the
+      saddle's influence. Blue is the mesh's actual two triangles (each capping one inside corner,
+      using its vertical edge crossing). Try <code>s = 2</code> (the default) at a low <code>z</code>:
+      the mesh reports a crossing, the trilinear field reports none.
     </p>
     <div class="legend">
       <div class="legend-item"><span class="swatch" style="background:var(--mesh)"></span>Mesh crossing (case5_mesh, real triangles)</div>
@@ -304,8 +310,12 @@
       </div>
       <div style="display:flex; flex-direction:column; gap:16px;">
         <div class="slider-row">
-          <div class="slider-label"><span>probe height <span class="mono" id="zLabel">z = 0.00</span></span><span>0 &rarr; 0.30</span></div>
-          <input type="range" id="zSlider" min="0" max="0.30" step="0.0015" value="0.02" />
+          <div class="slider-label"><span>inside-corner magnitude <span class="mono" id="sLabel">s = 2.00</span></span><span>0.2 &rarr; 3.0</span></div>
+          <input type="range" id="sSlider" min="0.2" max="3.0" step="0.05" value="2.0" />
+        </div>
+        <div class="slider-row">
+          <div class="slider-label"><span>probe height <span class="mono" id="zLabel">z = 0.05</span></span><span>0 &rarr; 1</span></div>
+          <input type="range" id="zSlider" min="0" max="1" step="0.002" value="0.05" />
         </div>
         <div class="readout" id="readout"></div>
       </div>
@@ -314,15 +324,7 @@
 
   <section class="card">
     <h2>Crossing position as the probe rises</h2>
-    <p class="desc">
-      Both curves come straight from <code>find_mesh_crossings</code> / <code>find_trilinear_crossings</code>
-      (dense-sample + bisection, same as the corner-magnitude sweep) &mdash; only now the swept
-      variable is the probe's height <code>z</code> instead of the corner value <code>s</code>. The
-      mesh's crossing bracket is consistently wider than the true field's at every height: the mesh
-      always reports slightly more "gap" than actually exists. Both vanish together at
-      <code class="mono">z* = s / (1 + s) &asymp; 0.231</code> &mdash; the height where the probe
-      exits precisely at the shared corner vertices, the one point every method has to agree on.
-    </p>
+    <p class="desc" id="chartDesc"></p>
     <div class="chart-wrap" id="chartWrap">
       <svg class="chart" id="chartSvg" viewBox="0 0 860 410" preserveAspectRatio="xMidYMid meet"></svg>
       <div class="tooltip" id="tooltip"></div>
@@ -331,9 +333,9 @@
 
   <footer class="viz-footer">
     Corner values, triangle construction (<code>known_cases.case5_mesh</code>), and both crossing
-    functions are exactly <code>levelset_metrology</code>'s Python bindings; the height threshold
-    <code>z* = s/(1+s)</code> is the trilinear value at the shared corner (edge 0&ndash;4's own
-    zero-crossing), verified numerically against the bindings before this page was built.
+    functions match <code>levelset_metrology</code>'s Python bindings exactly; the two thresholds
+    (<code>z*</code>, and <code>z_lo</code> when <code>s &gt; 1</code>) were derived by hand and
+    verified numerically against the bindings before this page was built.
   </footer>
 
 </div>
@@ -343,8 +345,6 @@
 (function () {
   "use strict";
 
-  const S = 0.3;
-  const V = [-S, 1, -S, 1, 1, 1, 1, 1];
   const CORNER_OFFSET = [
     [0, 0, 0], [1, 0, 0], [1, 1, 0], [0, 1, 0],
     [0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1],
@@ -354,6 +354,8 @@
     [4, 5], [5, 6], [6, 7], [7, 4],
     [0, 4], [1, 5], [2, 6], [3, 7],
   ];
+
+  let S, V, P_E0, P_E3, P_E8, P_E1, P_E10, P_E2, TRIANGLES, Z_STAR, Z_LO;
 
   function trilinear(x, y, z) {
     let r = 0;
@@ -372,9 +374,15 @@
     const pa = CORNER_OFFSET[a], pb = CORNER_OFFSET[b];
     return [pa[0] + t * (pb[0] - pa[0]), pa[1] + t * (pb[1] - pa[1]), pa[2] + t * (pb[2] - pa[2])];
   }
-  const P_E0 = edgePoint(0, 1), P_E3 = edgePoint(3, 0), P_E8 = edgePoint(0, 4);
-  const P_E1 = edgePoint(1, 2), P_E10 = edgePoint(2, 6), P_E2 = edgePoint(2, 3);
-  const TRIANGLES = [[P_E0, P_E3, P_E8], [P_E1, P_E10, P_E2]];
+
+  function computeGeometry() {
+    V = [-S, 1, -S, 1, 1, 1, 1, 1];
+    P_E0 = edgePoint(0, 1); P_E3 = edgePoint(3, 0); P_E8 = edgePoint(0, 4);
+    P_E1 = edgePoint(1, 2); P_E10 = edgePoint(2, 6); P_E2 = edgePoint(2, 3);
+    TRIANGLES = [[P_E0, P_E3, P_E8], [P_E1, P_E10, P_E2]];
+    Z_STAR = S / (1 + S);
+    Z_LO = Math.max(0, (S - 1) / (1 + S));
+  }
 
   function sub(a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }
   function cross(a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }
@@ -427,7 +435,6 @@
     }
     return roots;
   }
-  const Z_STAR = S / (1 + S);
 
   // ---- 3D cube projection ----------------------------------------------
 
@@ -453,54 +460,80 @@
     return el;
   }
 
-  for (const [a, b] of EDGES) {
-    const [x1, y1] = toScreen(CORNER_OFFSET[a]);
-    const [x2, y2] = toScreen(CORNER_OFFSET[b]);
-    cubeSvg.appendChild(svgEl("line", { class: "cube-edge", x1, y1, x2, y2 }));
-  }
-  for (const tri of TRIANGLES) {
-    const pts = tri.map((p) => toScreen(p).join(",")).join(" ");
-    cubeSvg.appendChild(svgEl("polygon", { class: "cube-tri", points: pts }));
-  }
-  const cornerLabelDefs = [
-    { c: 0, text: "0: " + (-S).toFixed(1) }, { c: 1, text: "1: 1" },
-    { c: 2, text: "2: " + (-S).toFixed(1) }, { c: 3, text: "3: 1" },
-  ];
-  cornerLabelDefs.forEach(({ c, text }) => {
-    const [x, y] = toScreen(CORNER_OFFSET[c]);
-    cubeSvg.appendChild(svgEl("circle", {
-      class: "corner-dot", cx: x, cy: y, r: 4,
-      fill: V[c] < 0 ? "var(--inside)" : "var(--outside)",
-    }));
-    const dx = CORNER_OFFSET[c][0] < 0.5 ? -8 : 8;
-    const dy = CORNER_OFFSET[c][1] < 0.5 ? 12 : -8;
-    const lbl = svgEl("text", {
-      class: "corner-lbl", x: x + dx, y: y + dy,
-      "text-anchor": CORNER_OFFSET[c][0] < 0.5 ? "end" : "start",
-    });
-    lbl.textContent = text;
-    cubeSvg.appendChild(lbl);
-  });
-  [4, 5, 6, 7].forEach((c) => {
-    const [x, y] = toScreen(CORNER_OFFSET[c]);
-    cubeSvg.appendChild(svgEl("circle", { class: "corner-dot", cx: x, cy: y, r: 3.5, fill: "var(--outside)" }));
-  });
+  let probeLine, markerEls;
 
-  const probeLine = svgEl("line", { class: "probe-seg" });
-  cubeSvg.appendChild(probeLine);
-  const markerEls = [0, 1, 2, 3].map(() => {
-    const el = svgEl("circle", { class: "cross-marker", r: 5, opacity: 0 });
-    cubeSvg.appendChild(el);
-    return el;
-  });
+  function rebuildCube() {
+    cubeSvg.innerHTML = "";
+    for (const [a, b] of EDGES) {
+      const [x1, y1] = toScreen(CORNER_OFFSET[a]);
+      const [x2, y2] = toScreen(CORNER_OFFSET[b]);
+      cubeSvg.appendChild(svgEl("line", { class: "cube-edge", x1, y1, x2, y2 }));
+    }
+    for (const tri of TRIANGLES) {
+      const pts = tri.map((p) => toScreen(p).join(",")).join(" ");
+      cubeSvg.appendChild(svgEl("polygon", { class: "cube-tri", points: pts }));
+    }
+    const cornerLabelDefs = [
+      { c: 0, text: "0: " + (-S).toFixed(2) }, { c: 1, text: "1: 1" },
+      { c: 2, text: "2: " + (-S).toFixed(2) }, { c: 3, text: "3: 1" },
+    ];
+    cornerLabelDefs.forEach(({ c, text }) => {
+      const [x, y] = toScreen(CORNER_OFFSET[c]);
+      cubeSvg.appendChild(svgEl("circle", {
+        class: "corner-dot", cx: x, cy: y, r: 4,
+        fill: V[c] < 0 ? "var(--inside)" : "var(--outside)",
+      }));
+      const dx = CORNER_OFFSET[c][0] < 0.5 ? -8 : 8;
+      const dy = CORNER_OFFSET[c][1] < 0.5 ? 12 : -8;
+      const lbl = svgEl("text", {
+        class: "corner-lbl", x: x + dx, y: y + dy,
+        "text-anchor": CORNER_OFFSET[c][0] < 0.5 ? "end" : "start",
+      });
+      lbl.textContent = text;
+      cubeSvg.appendChild(lbl);
+    });
+    [4, 5, 6, 7].forEach((c) => {
+      const [x, y] = toScreen(CORNER_OFFSET[c]);
+      cubeSvg.appendChild(svgEl("circle", { class: "corner-dot", cx: x, cy: y, r: 3.5, fill: "var(--outside)" }));
+    });
+
+    probeLine = svgEl("line", { class: "probe-seg" });
+    cubeSvg.appendChild(probeLine);
+    markerEls = [0, 1, 2, 3].map(() => {
+      const el = svgEl("circle", { class: "cross-marker", r: 5, opacity: 0 });
+      cubeSvg.appendChild(el);
+      return el;
+    });
+  }
 
   // ---- controls ----------------------------------------------------
 
+  const sSlider = document.getElementById("sSlider");
+  const sLabel = document.getElementById("sLabel");
   const zSlider = document.getElementById("zSlider");
   const zLabel = document.getElementById("zLabel");
   const readout = document.getElementById("readout");
+  const chartDesc = document.getElementById("chartDesc");
 
   function fmt(x) { return x.toFixed(4); }
+
+  function updateChartDesc() {
+    if (Z_LO > 1e-6) {
+      chartDesc.innerHTML =
+        'With <span class="mono">s = ' + S.toFixed(2) + '</span> &gt; 1, a third regime opens up ' +
+        'near the bottom: for <span class="mono">z &lt; z_lo</span> the mesh still reports a ' +
+        'crossing but the true field never does &mdash; a genuine disagreement over whether ' +
+        'material is there at all, not just where. Between <span class="mono">z_lo</span> and ' +
+        '<span class="mono">z*</span> both find a crossing, just at different positions. Above ' +
+        '<span class="mono">z*</span> both agree: nothing there.';
+    } else {
+      chartDesc.innerHTML =
+        'With <span class="mono">s = ' + S.toFixed(2) + '</span> &le; 1, both methods agree on ' +
+        '<em>whether</em> a crossing exists at every height &mdash; only <em>where</em> it is ' +
+        'differs, closing to exactly zero at <span class="mono">z* = s/(1+s) = ' +
+        Z_STAR.toFixed(3) + '</span>, where the probe passes through the shared corner vertex.';
+    }
+  }
 
   function updateProbe() {
     const z0 = parseFloat(zSlider.value);
@@ -531,6 +564,8 @@
     let statusHtml, statusClass;
     if (meshTs.length === 0 && triTs.length === 0) {
       statusHtml = "no crossing (both)"; statusClass = "none";
+    } else if (meshTs.length > 0 && triTs.length === 0) {
+      statusHtml = "topological disagreement"; statusClass = "critical";
     } else if (meshTs.length === triTs.length && meshTs.length > 0) {
       const diffs = meshTs.map((t, i) => Math.abs(t - triTs[i]));
       const maxDiff = Math.max(...diffs);
@@ -553,7 +588,6 @@
 
     updateChartMarker(z0);
   }
-  zSlider.addEventListener("input", updateProbe);
 
   // ---- sweep chart ----------------------------------------------------
 
@@ -565,47 +599,22 @@
   const M = { top: 18, right: 22, bottom: 62, left: 64 };
   const plotW = W - M.left - M.right;
   const plotH = H - M.top - M.bottom;
-  const zMax = 0.30;
+  let zMax;
   const xOf = (z0) => M.left + (z0 / zMax) * plotW;
   const yOf = (t) => M.top + (1 - t) * plotH;
 
-  const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
-  yTicks.forEach((t) => {
-    svg.appendChild(svgEl("line", { class: "gridline", x1: M.left, x2: W - M.right, y1: yOf(t), y2: yOf(t) }));
-    const lbl = svgEl("text", { class: "axis-label", x: M.left - 10, y: yOf(t) + 4, "text-anchor": "end" });
-    lbl.textContent = t.toFixed(2);
-    svg.appendChild(lbl);
-  });
-  const xTicks = [0, 0.05, 0.10, 0.15, 0.20, Z_STAR, 0.25, 0.30];
-  xTicks.forEach((z0) => {
-    const lbl = svgEl("text", { class: "axis-label", x: xOf(z0), y: H - M.bottom + 18, "text-anchor": "middle" });
-    lbl.textContent = z0.toFixed(2);
-    svg.appendChild(lbl);
-  });
+  let sliderMarker, crosshair, dots, overlay;
 
-  const yAxisTitle = svgEl("text", {
-    class: "axis-title", x: 0, y: 0, "text-anchor": "middle",
-    transform: "translate(16, " + (M.top + plotH / 2) + ") rotate(-90)",
-  });
-  yAxisTitle.textContent = "vertical axis: crossing position t";
-  svg.appendChild(yAxisTitle);
-  const xAxisTitle = svgEl("text", { class: "axis-title", x: M.left + plotW / 2, y: H - 8, "text-anchor": "middle" });
-  xAxisTitle.textContent = "horizontal axis: probe height z";
-  svg.appendChild(xAxisTitle);
+  function niceTicks(max) {
+    const ticks = [0];
+    const step = max <= 0.4 ? 0.05 : max <= 0.8 ? 0.1 : 0.2;
+    for (let v = step; v < max - step * 0.4; v += step) ticks.push(Math.round(v * 1000) / 1000);
+    ticks.push(max);
+    return ticks;
+  }
 
-  svg.appendChild(svgEl("rect", {
-    class: "gap-band", x: xOf(Z_STAR), y: M.top, width: (W - M.right) - xOf(Z_STAR), height: plotH,
-  }));
-  const gapLabel = svgEl("text", { class: "region-label", x: (xOf(Z_STAR) + (W - M.right)) / 2, y: M.top + 16, "text-anchor": "middle" });
-  gapLabel.textContent = "no crossing (either method)";
-  svg.appendChild(gapLabel);
-  svg.appendChild(svgEl("line", { class: "coincide-line", x1: xOf(Z_STAR), x2: xOf(Z_STAR), y1: M.top, y2: H - M.bottom }));
-  const starLabel = svgEl("text", { class: "region-label", x: xOf(Z_STAR), y: H - M.bottom + 34, "text-anchor": "middle" });
-  starLabel.textContent = "z*";
-  svg.appendChild(starLabel);
-
-  const N_SAMPLES = 200;
   function buildCurve(getTs, branch) {
+    const N_SAMPLES = 220;
     const pts = [];
     for (let i = 0; i <= N_SAMPLES; i++) {
       const z0 = (i / N_SAMPLES) * zMax;
@@ -626,33 +635,95 @@
     }
     return d;
   }
-  const meshLower = buildCurve((z0) => meshCrossings(z0), "lower");
-  const meshUpper = buildCurve((z0) => meshCrossings(z0), "upper");
-  const triLower = buildCurve((z0) => trilinearCrossings(z0), "lower");
-  const triUpper = buildCurve((z0) => trilinearCrossings(z0), "upper");
-  svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshLower) }));
-  svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshUpper) }));
-  svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triLower) }));
-  svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triUpper) }));
 
-  const sliderMarker = svgEl("line", { class: "slider-marker", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom });
-  svg.appendChild(sliderMarker);
+  function rebuildChart() {
+    svg.innerHTML = "";
+    zMax = Math.min(1, Z_STAR * 1.35);
+    updateChartDesc();
+
+    const yTicks = [0, 0.25, 0.5, 0.75, 1.0];
+    yTicks.forEach((t) => {
+      svg.appendChild(svgEl("line", { class: "gridline", x1: M.left, x2: W - M.right, y1: yOf(t), y2: yOf(t) }));
+      const lbl = svgEl("text", { class: "axis-label", x: M.left - 10, y: yOf(t) + 4, "text-anchor": "end" });
+      lbl.textContent = t.toFixed(2);
+      svg.appendChild(lbl);
+    });
+    niceTicks(zMax).forEach((z0) => {
+      const lbl = svgEl("text", { class: "axis-label", x: xOf(z0), y: H - M.bottom + 18, "text-anchor": "middle" });
+      lbl.textContent = z0.toFixed(2);
+      svg.appendChild(lbl);
+    });
+
+    const yAxisTitle = svgEl("text", {
+      class: "axis-title", x: 0, y: 0, "text-anchor": "middle",
+      transform: "translate(16, " + (M.top + plotH / 2) + ") rotate(-90)",
+    });
+    yAxisTitle.textContent = "vertical axis: crossing position t";
+    svg.appendChild(yAxisTitle);
+    const xAxisTitle = svgEl("text", { class: "axis-title", x: M.left + plotW / 2, y: H - 8, "text-anchor": "middle" });
+    xAxisTitle.textContent = "horizontal axis: probe height z";
+    svg.appendChild(xAxisTitle);
+
+    if (Z_LO > 1e-6) {
+      svg.appendChild(svgEl("rect", {
+        class: "disagree-band", x: xOf(0), y: M.top, width: xOf(Z_LO) - xOf(0), height: plotH,
+      }));
+      const disLabel = svgEl("text", { class: "region-label critical", x: xOf(0) + (xOf(Z_LO) - xOf(0)) / 2, y: M.top + 16, "text-anchor": "middle" });
+      disLabel.textContent = "mesh only (disagreement)";
+      svg.appendChild(disLabel);
+      svg.appendChild(svgEl("line", { class: "disagree-line", x1: xOf(Z_LO), x2: xOf(Z_LO), y1: M.top, y2: H - M.bottom }));
+      const loLabel = svgEl("text", { class: "region-label critical", x: xOf(Z_LO), y: H - M.bottom + 34, "text-anchor": "middle" });
+      loLabel.textContent = "z_lo";
+      svg.appendChild(loLabel);
+    }
+
+    svg.appendChild(svgEl("rect", {
+      class: "gap-band", x: xOf(Z_STAR), y: M.top, width: (W - M.right) - xOf(Z_STAR), height: plotH,
+    }));
+    const gapLabel = svgEl("text", { class: "region-label", x: (xOf(Z_STAR) + (W - M.right)) / 2, y: M.top + 16, "text-anchor": "middle" });
+    gapLabel.textContent = "no crossing (either method)";
+    svg.appendChild(gapLabel);
+    svg.appendChild(svgEl("line", { class: "coincide-line", x1: xOf(Z_STAR), x2: xOf(Z_STAR), y1: M.top, y2: H - M.bottom }));
+    const starLabel = svgEl("text", { class: "region-label", x: xOf(Z_STAR), y: H - M.bottom + 34, "text-anchor": "middle" });
+    starLabel.textContent = "z*";
+    svg.appendChild(starLabel);
+
+    const meshLower = buildCurve((z0) => meshCrossings(z0), "lower");
+    const meshUpper = buildCurve((z0) => meshCrossings(z0), "upper");
+    const triLower = buildCurve((z0) => trilinearCrossings(z0), "lower");
+    const triUpper = buildCurve((z0) => trilinearCrossings(z0), "upper");
+    svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshLower) }));
+    svg.appendChild(svgEl("path", { class: "line-mesh", d: pathFromPts(meshUpper) }));
+    svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triLower) }));
+    svg.appendChild(svgEl("path", { class: "line-tri", d: pathFromPts(triUpper) }));
+
+    sliderMarker = svgEl("line", { class: "slider-marker", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom });
+    svg.appendChild(sliderMarker);
+
+    crosshair = svgEl("line", { class: "crosshair", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom, opacity: 0 });
+    svg.appendChild(crosshair);
+    dots = [0, 1, 2, 3].map((i) => {
+      const c = svgEl("circle", { class: "hover-dot", r: 4.5, opacity: 0, fill: i < 2 ? "var(--mesh)" : "var(--tri)" });
+      svg.appendChild(c);
+      return c;
+    });
+
+    overlay = svgEl("rect", { x: M.left, y: M.top, width: plotW, height: plotH, fill: "transparent", style: "cursor:crosshair" });
+    svg.appendChild(overlay);
+    overlay.addEventListener("mousemove", onMove);
+    overlay.addEventListener("mouseleave", () => {
+      crosshair.setAttribute("opacity", 0);
+      dots.forEach((d) => d.setAttribute("opacity", 0));
+      tooltip.style.opacity = 0;
+    });
+    overlay.addEventListener("touchmove", (e) => { onMove(e.touches[0]); e.preventDefault(); }, { passive: false });
+  }
+
   function updateChartMarker(z0) {
-    const x = xOf(z0);
+    const x = xOf(Math.min(z0, zMax));
     sliderMarker.setAttribute("x1", x);
     sliderMarker.setAttribute("x2", x);
   }
-
-  const crosshair = svgEl("line", { class: "crosshair", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom, opacity: 0 });
-  svg.appendChild(crosshair);
-  const dots = [0, 1, 2, 3].map((i) => {
-    const c = svgEl("circle", { class: "hover-dot", r: 4.5, opacity: 0, fill: i < 2 ? "var(--mesh)" : "var(--tri)" });
-    svg.appendChild(c);
-    return c;
-  });
-
-  const overlay = svgEl("rect", { x: M.left, y: M.top, width: plotW, height: plotH, fill: "transparent", style: "cursor:crosshair" });
-  svg.appendChild(overlay);
 
   function onMove(evt) {
     const rect = svg.getBoundingClientRect();
@@ -686,14 +757,18 @@
     zSlider.value = z0;
     updateProbe();
   }
-  overlay.addEventListener("mousemove", onMove);
-  overlay.addEventListener("mouseleave", () => {
-    crosshair.setAttribute("opacity", 0);
-    dots.forEach((d) => d.setAttribute("opacity", 0));
-    tooltip.style.opacity = 0;
-  });
-  overlay.addEventListener("touchmove", (e) => { onMove(e.touches[0]); e.preventDefault(); }, { passive: false });
 
-  updateProbe();
+  function onSChange() {
+    S = parseFloat(sSlider.value);
+    sLabel.textContent = "s = " + S.toFixed(2);
+    computeGeometry();
+    rebuildCube();
+    rebuildChart();
+    updateProbe();
+  }
+  sSlider.addEventListener("input", onSChange);
+  zSlider.addEventListener("input", updateProbe);
+
+  onSChange();
 })();
 </script>
