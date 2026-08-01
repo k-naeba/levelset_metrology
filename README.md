@@ -83,11 +83,15 @@ single grid cell.
 ([**view live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html))
 visualizes it: drag a horizontal probe line across the cell and watch the
 two methods' crossing positions pull apart, then a chart of that same
-crossing position swept continuously across the full probe range. Unlike
-the 3D case, `levelset2d_polygon`'s marching squares resolves the saddle
-ambiguity correctly (via the true cell-center value), so here the two
-methods only disagree on *where* the crossing is, never on *whether* one
-exists.
+crossing position swept continuously across the full probe range. A second
+slider exposes the inside-corner magnitude `s` itself -- `MarchCell`'s
+topology branch flips at `s = 1` (which corner pair the two segments
+connect), but the two shared-boundary heights stay at
+`min(s, 1)/(1+s)` and `max(s, 1)/(1+s)` either way, so unlike the 3D case,
+`levelset2d_polygon`'s marching squares always resolves the saddle
+ambiguity correctly (via the true cell-center value): the two methods
+disagree only on *where* the crossing is, never on *whether* one exists,
+for any `s`.
 
 All three pages are self-contained (no build step, no server) and served
 directly from this repo's `docs/` folder via
