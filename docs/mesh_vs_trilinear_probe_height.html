@@ -473,11 +473,7 @@
       const pts = tri.map((p) => toScreen(p).join(",")).join(" ");
       cubeSvg.appendChild(svgEl("polygon", { class: "cube-tri", points: pts }));
     }
-    const cornerLabelDefs = [
-      { c: 0, text: "0: " + (-S).toFixed(2) }, { c: 1, text: "1: 1" },
-      { c: 2, text: "2: " + (-S).toFixed(2) }, { c: 3, text: "3: 1" },
-    ];
-    cornerLabelDefs.forEach(({ c, text }) => {
+    [0, 1, 2, 3].forEach((c) => {
       const [x, y] = toScreen(CORNER_OFFSET[c]);
       cubeSvg.appendChild(svgEl("circle", {
         class: "corner-dot", cx: x, cy: y, r: 4,
@@ -489,7 +485,7 @@
         class: "corner-lbl", x: x + dx, y: y + dy,
         "text-anchor": CORNER_OFFSET[c][0] < 0.5 ? "end" : "start",
       });
-      lbl.textContent = text;
+      lbl.textContent = c;
       cubeSvg.appendChild(lbl);
     });
     [4, 5, 6, 7].forEach((c) => {

@@ -215,19 +215,22 @@
   }
   .cell-canvas-wrap { position: relative; width: 100%; aspect-ratio: 1 / 1; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
   canvas.field { width: 100%; height: 100%; display: block; }
-  .corner-label {
+  .corner-dot {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+    border: 1.2px solid var(--surface);
+    box-shadow: 0 0 0 1px var(--border);
+  }
+  .corner-idx {
     position: absolute;
     font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, monospace;
     font-size: 10px;
     font-weight: 600;
-    color: var(--text-primary);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 4px;
-    padding: 1px 4px;
-    line-height: 1.4;
-    transform: translate(-50%, -50%);
-    white-space: nowrap;
+    color: var(--text-secondary);
+    pointer-events: none;
   }
   .marker {
     position: absolute;
@@ -516,18 +519,26 @@
   }
 
   const cornerDefs = [
-    { x: 0, y: 100, text: "0: " + V00 },
-    { x: 100, y: 100, text: "1: " + V10 },
-    { x: 100, y: 0, text: "2: " + V11 },
-    { x: 0, y: 0, text: "3: " + V01 },
+    { x: 0, y: 100, v: V00, idx: "0", ox: 11, oy: -11 },
+    { x: 100, y: 100, v: V10, idx: "1", ox: -11, oy: -11 },
+    { x: 100, y: 0, v: V11, idx: "2", ox: -11, oy: 11 },
+    { x: 0, y: 0, v: V01, idx: "3", ox: 11, oy: 11 },
   ];
   cornerDefs.forEach((c) => {
-    const el = document.createElement("div");
-    el.className = "corner-label";
-    el.style.left = c.x + "%";
-    el.style.top = c.y + "%";
-    el.textContent = c.text;
-    cellWrap.appendChild(el);
+    const dot = document.createElement("div");
+    dot.className = "corner-dot";
+    dot.style.left = c.x + "%";
+    dot.style.top = c.y + "%";
+    dot.style.background = c.v < 0 ? "var(--inside)" : "var(--outside)";
+    cellWrap.appendChild(dot);
+
+    const lbl = document.createElement("div");
+    lbl.className = "corner-idx";
+    lbl.style.left = c.x + "%";
+    lbl.style.top = c.y + "%";
+    lbl.style.transform = "translate(calc(-50% + " + c.ox + "px), calc(-50% + " + c.oy + "px))";
+    lbl.textContent = c.idx;
+    cellWrap.appendChild(lbl);
   });
 
   const probeLineEl = document.createElement("div");
