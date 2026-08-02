@@ -53,7 +53,6 @@ for the actual findings (a real, quantified topology disagreement at the
 classic face-saddle ambiguity).
 
 [`docs/saddle_crossing_diff.html`](docs/saddle_crossing_diff.html)
-([**view live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html))
 visualizes that disagreement: crossing position vs. the inside-corner
 magnitude `s` across the full sweep, plus two field heatmaps (`s =
 0.30`, agreeing but offset; `s = 2.00`, disagreeing) showing why -- the
@@ -61,9 +60,12 @@ two negative lobes at the saddle's inside corners merge into one
 connected region above the threshold, so the probe stops crossing zero
 even though the fixed mesh triangulation still reports a gap.
 
+<img src="docs/images/saddle_crossing_diff_preview.png" width="860" alt="Crossing position vs. inside-corner magnitude s, showing the mesh and trilinear curves agreeing-but-offset below s=1 and disagreeing above it">
+
+*Static snapshot -- the full sweep over `s = 0.2` to `3.0` is already baked into this one chart. Want to explore it interactively (hover for exact values at any `s`)?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html).
+
 A companion page,
-[`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html)
-([**view live**](https://k-naeba.github.io/levelset_metrology/mesh_vs_trilinear_probe_height.html)),
+[`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html),
 sweeps a different variable: corner values fixed, and the diagonal probe
 line itself raised from the bottom face toward the top. Drag the height
 slider to move the probe through an interactive 3D projection of the
@@ -76,11 +78,14 @@ and the trilinear field reports none at all -- a genuine topological
 disagreement, not just a positional one, with its own derived threshold
 `z_lo = (s-1)/(1+s)`.
 
+<img src="docs/images/mesh_vs_trilinear_probe_height_preview.png" width="860" alt="3D cube projection with the probe at s=2, z=0.05, showing a topological disagreement: the mesh reports a crossing, the trilinear field reports none">
+
+*Shown at `s = 2.00`, `z = 0.05` -- the headline "topological disagreement" state. Want to drag the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/mesh_vs_trilinear_probe_height.html).
+
 A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
 edge crossings against the raw bilinear field's zero crossings, within a
 single grid cell.
 [`docs/polygon_vs_bilinear_probe.html`](docs/polygon_vs_bilinear_probe.html)
-([**view live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html))
 visualizes it: drag a horizontal probe line across the cell and watch the
 two methods' crossing positions pull apart, then a chart of that same
 crossing position swept continuously across the full probe range. A second
@@ -93,10 +98,15 @@ ambiguity correctly (via the true cell-center value): the two methods
 disagree only on *where* the crossing is, never on *whether* one exists,
 for any `s`.
 
+<img src="docs/images/polygon_vs_bilinear_probe_preview.png" width="860" alt="2D cell view with the probe at s=2, y=0.15, showing the polygon and bilinear crossings at slightly different x positions">
+
+*Shown at `s = 2.00`, `y = 0.15`. Want to sweep the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html).
+
 All three pages are self-contained (no build step, no server) and served
 directly from this repo's `docs/` folder via
 [GitHub Pages](https://k-naeba.github.io/levelset_metrology/); they also
-still work if you just open the file locally in a browser.
+still work if you just open the file locally in a browser (or download it
+straight from this repo).
 
 ## Python bindings
 
