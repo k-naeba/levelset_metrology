@@ -584,15 +584,19 @@
   function fmt(x) { return x.toFixed(3); }
 
   function updateChartDesc() {
+    const meetPoints = T_HI - T_LO < 0.0005
+      ? '<span class="mono">y = 0</span>, <span class="mono">y = ' + T_LO.toFixed(3) +
+        '</span>, and <span class="mono">y = 1</span> (the middle two collapse to one point at ' +
+        'this <span class="mono">s</span>)'
+      : '<span class="mono">y = 0</span>, <span class="mono">y = ' + T_LO.toFixed(3) +
+        '</span>, <span class="mono">y = ' + T_HI.toFixed(3) + '</span>, and <span class="mono">y = 1</span>';
     chartDesc.innerHTML =
       'Both curves are exact (dense-sample + bisection root find, same technique as ' +
       '<code>find_mesh_crossings</code> / <code>find_trilinear_crossings</code>). They meet ' +
-      'exactly at <span class="mono">y = 0</span>, <span class="mono">y = ' + T_LO.toFixed(3) +
-      '</span>, <span class="mono">y = ' + T_HI.toFixed(3) + '</span>, and <span class="mono">y = ' +
-      '1</span> -- shared edge crossings, computed identically by both methods. Between the shared ' +
-      "points the polygon's straight segment and the field's curved zero-contour pull apart. In " +
-      'the shaded middle band neither method finds a crossing at all: the whole probe line stays on ' +
-      'one side of zero.';
+      'exactly at ' + meetPoints + ' -- shared edge crossings, computed identically by both ' +
+      "methods. Between the shared points the polygon's straight segment and the field's curved " +
+      'zero-contour pull apart. In the shaded middle band neither method finds a crossing at all: ' +
+      'the whole probe line stays on one side of zero.';
   }
 
   function updateProbe() {

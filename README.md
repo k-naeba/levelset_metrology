@@ -82,6 +82,12 @@ disagreement, not just a positional one, with its own derived threshold
 
 *Shown at `s = 2.00`, `z = 0.05` -- the headline "topological disagreement" state. Want to drag the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/mesh_vs_trilinear_probe_height.html).
 
+The "crossing position as the probe rises" chart from that same page, by itself, at the
+`s` that makes the two methods disagree the most: `s = 3.00` (the top of the slider's range),
+where the mesh-only disagreement band `[0, z_lo]` is at its widest.
+
+<img src="docs/images/mesh_vs_trilinear_sweep_chart.png" width="860" alt="Crossing position vs. probe height z at s=3.00, showing a wide mesh-only disagreement band from z=0 to z_lo=0.5">
+
 A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
 edge crossings against the raw bilinear field's zero crossings, within a
 single grid cell.
@@ -101,6 +107,21 @@ for any `s`.
 <img src="docs/images/polygon_vs_bilinear_probe_preview.png" width="860" alt="2D cell view with the probe at s=2, y=0.15, showing the polygon and bilinear crossings at slightly different x positions">
 
 *Shown at `s = 2.00`, `y = 0.15`. Want to sweep the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html).
+
+The "crossing position as the probe sweeps" chart from this page, on its own. First, at
+`s = 0.90`, just shy of the interesting threshold -- an easier read to get oriented: both
+curves trace roughly the same rise, but pull apart noticeably around the middle before the
+gap band, where the polygon's straight edge dives to `x = 0` while the bilinear crossing
+eases off more gradually.
+
+<img src="docs/images/polygon_vs_bilinear_sweep_chart_s09.png" width="860" alt="Crossing position vs. probe height y at s=0.90, showing the polygon and bilinear curves diverging noticeably around the middle of the sweep">
+
+Now push `s` to exactly `1.00` -- the asymptotic-decider threshold itself -- and the gap
+becomes as large as it ever gets. At `s = 1` the bilinear field factors into
+`(2x-1)(1-2y)`, so the true crossing freezes at `x = 0.5` for the *entire* sweep, while the
+polygon's straight-edge approximation still swings across almost the full width of the cell.
+
+<img src="docs/images/polygon_vs_bilinear_sweep_chart.png" width="860" alt="Crossing position vs. probe height y at s=1.00, showing the bilinear crossing frozen at x=0.5 while the polygon crossing swings across nearly the whole cell">
 
 All three pages are self-contained (no build step, no server) and served
 directly from this repo's `docs/` folder via
