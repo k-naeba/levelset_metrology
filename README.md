@@ -64,6 +64,25 @@ even though the fixed mesh triangulation still reports a gap.
 
 *Static snapshot -- the full sweep over `s = 0.2` to `3.0` is already baked into this one chart. Want to explore it interactively (hover for exact values at any `s`)?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html).
 
+The same page also answers the natural follow-up: how much of that
+disagreement is specific to the saddle's *two* separate inside corners?
+Corner 0 alone inside (`known_cases.case1_mesh`) is the unambiguous
+baseline -- marching cubes has nothing to disambiguate, so mesh and
+trilinear always agree on *whether* there's a crossing. The gap between
+them is a pure positional offset that grows smoothly with `s`, never a
+disagreement in kind:
+
+<img src="docs/images/case1_comparison_chart.png" width="860" alt="Crossing position vs. the one inside corner's magnitude s for the single-region baseline, showing the mesh and trilinear lines diverging smoothly with no threshold or region split">
+
+And the same field-heatmap view as above, now with just one blue lobe
+that can never grow large enough to swallow the whole probe diagonal --
+which is exactly why case 1 never sees the topological disagreement case
+5 does:
+
+<img src="docs/images/case1_comparison_panels.png" width="860" alt="Two field heatmaps for the single-region baseline at s=0.30 and s=2.00, each showing one blue lobe near corner 0 and a single agreeing-but-offset crossing">
+
+[**Open it live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html#case1-comparison) (jumps straight to this comparison).
+
 A companion page,
 [`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html),
 sweeps a different variable: corner values fixed, and the diagonal probe
