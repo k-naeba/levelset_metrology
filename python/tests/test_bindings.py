@@ -37,6 +37,29 @@ def test_mesh3d_and_find_mesh_crossings():
     assert hits[0] == pytest.approx(0.5)
 
 
+@pytest.mark.parametrize("s,expected_mesh,expected_tri", [
+    (0.3, 0.3 / (2 * 1.3), 1 - 1 / (1.3 ** 0.5)),
+    (2.0, 2.0 / (2 * 3.0), 1 - 1 / (3.0 ** 0.5)),
+])
+def test_known_case1_matches_closed_form(s, expected_mesh, expected_tri):
+    # case1 (single inside corner) has a closed-form solution along the
+    # same probe as case5: mesh crossing t = s/(2(s+1)) (case5's own
+    # first-triangle formula, since it's the same triangle), trilinear
+    # crossing t = 1 - 1/sqrt(s+1) (solving the bilinear field's zero on
+    # the probe's z=0 face directly). Both always yield exactly one
+    # crossing -- unlike case5, there's no s where they disagree on
+    # whether a crossing exists at all.
+    v = [-s, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+    origin, direction = np.array([0.0, 0.0, 0.0]), np.array([1.0, 1.0, 0.0])
+    mesh = lm.known_cases.case1_mesh(v)
+    mesh_ts = lm.find_mesh_crossings(mesh, origin, direction)
+    tri_ts = lm.find_trilinear_crossings(v, origin, direction)
+    assert len(mesh_ts) == 1
+    assert len(tri_ts) == 1
+    assert mesh_ts[0] == pytest.approx(expected_mesh, abs=1e-6)
+    assert tri_ts[0] == pytest.approx(expected_tri, abs=1e-6)
+
+
 @pytest.mark.parametrize("s,expected", [(0.3, (0.1154, 0.8846)), (2.0, (1 / 3, 2 / 3))])
 def test_known_case5_mesh_matches_cpp_reference(s, expected):
     # Reference values from levelset3d_polygon's
