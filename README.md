@@ -1,21 +1,23 @@
-# levelset_metrology
+# levelset3d_trilinear_measure
 
 A C++17 header-only library of measurement/comparison primitives for
-level-set-derived geometry (`ns_cg::Grid2d`/`Grid3d`, `ns_cg::Polygon2d`,
-`ns_cg::Mesh3d`) -- e.g. finding where a probe line crosses a shape's
-boundary, and comparing that against the raw (bi/tri)linear interpolant
-the boundary was extracted from. Intended to grow into a dimension-
-agnostic metrology toolkit shared across
-[`levelset2d_polygon`](../levelset2d_polygon) and
-[`levelset3d_polygon`](../levelset3d_polygon), rather than being owned by
-either.
+3D level-set-derived geometry (`ns_cg::Mesh3d`) -- e.g. finding where a
+probe line crosses a mesh's boundary, and comparing that against the raw
+trilinear interpolant the boundary was extracted from.
 
 Depends only on [`common_geometry`](../common_geometry) -- not on
-`levelset2d_polygon` or `levelset3d_polygon` -- and operates purely on
-already-extracted geometry (a `Mesh3d`, corner values, etc.) passed in by
-the caller. It doesn't know how to run marching cubes, marching squares,
-or any other extraction algorithm itself; that stays the extracting
-project's job.
+`levelset3d_polygon` -- and operates purely on already-extracted geometry
+(a `Mesh3d`, corner values, etc.) passed in by the caller. It doesn't know
+how to run marching cubes or any other extraction algorithm itself; that
+stays the extracting project's job.
+
+The 2D counterpart,
+[`levelset2d_bilinear_measure`](../levelset2d_bilinear_measure), is a
+separate project (not just a namespace split): it operates on
+`ns_cg::Edge2d`/`Polygon2d` and bilinear fields instead, and its own
+findings differ in kind, not just in dimension -- see that project's
+README for why `levelset2d_polygon`'s marching squares never produces the
+topological disagreement this project documents below.
 
 ## Requirements
 
@@ -62,7 +64,7 @@ even though the fixed mesh triangulation still reports a gap.
 
 <img src="docs/images/saddle_crossing_diff_preview.png" width="860" alt="Crossing position vs. inside-corner magnitude s, showing the mesh and trilinear curves agreeing-but-offset below s=1 and disagreeing above it">
 
-*Static snapshot -- the full sweep over `s = 0.2` to `3.0` is already baked into this one chart. Want to explore it interactively (hover for exact values at any `s`)?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html).
+*Static snapshot -- the full sweep over `s = 0.2` to `3.0` is already baked into this one chart. Want to explore it interactively (hover for exact values at any `s`)?* [**Open it live**](https://k-naeba.github.io/levelset3d_trilinear_measure/saddle_crossing_diff.html).
 
 The same page also answers the natural follow-up: how much of that
 disagreement is specific to the saddle's *two* separate inside corners?
@@ -81,7 +83,7 @@ which is exactly why case 1 never sees the topological disagreement case
 
 <img src="docs/images/case1_comparison_panels.png" width="860" alt="Two field heatmaps for the single-region baseline at s=0.30 and s=2.00, each showing one blue lobe near corner 0 and a single agreeing-but-offset crossing">
 
-[**Open it live**](https://k-naeba.github.io/levelset_metrology/saddle_crossing_diff.html#case1-comparison) (jumps straight to this comparison).
+[**Open it live**](https://k-naeba.github.io/levelset3d_trilinear_measure/saddle_crossing_diff.html#case1-comparison) (jumps straight to this comparison).
 
 A companion page,
 [`docs/mesh_vs_trilinear_probe_height.html`](docs/mesh_vs_trilinear_probe_height.html),
@@ -99,7 +101,7 @@ disagreement, not just a positional one, with its own derived threshold
 
 <img src="docs/images/mesh_vs_trilinear_probe_height_preview.png" width="860" alt="3D cube projection with the probe at s=2, z=0.05, showing a topological disagreement: the mesh reports a crossing, the trilinear field reports none">
 
-*Shown at `s = 2.00`, `z = 0.05` -- the headline "topological disagreement" state. Want to drag the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/mesh_vs_trilinear_probe_height.html).
+*Shown at `s = 2.00`, `z = 0.05` -- the headline "topological disagreement" state. Want to drag the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset3d_trilinear_measure/mesh_vs_trilinear_probe_height.html).
 
 The "crossing position as the probe rises" chart from that same page, by itself, at the
 `s` that makes the two methods disagree the most: `s = 3.00` (the top of the slider's range),
@@ -107,51 +109,23 @@ where the mesh-only disagreement band `[0, z_lo]` is at its widest.
 
 <img src="docs/images/mesh_vs_trilinear_sweep_chart.png" width="860" alt="Crossing position vs. probe height z at s=3.00, showing a wide mesh-only disagreement band from z=0 to z_lo=0.5">
 
-A 2D analog exists too, comparing `levelset2d_polygon`'s extracted-polygon
-edge crossings against the raw bilinear field's zero crossings, within a
-single grid cell.
-[`docs/polygon_vs_bilinear_probe.html`](docs/polygon_vs_bilinear_probe.html)
-visualizes it: drag a horizontal probe line across the cell and watch the
-two methods' crossing positions pull apart, then a chart of that same
-crossing position swept continuously across the full probe range. A second
-slider exposes the inside-corner magnitude `s` itself -- `MarchCell`'s
-topology branch flips at `s = 1` (which corner pair the two segments
-connect), but the two shared-boundary heights stay at
-`min(s, 1)/(1+s)` and `max(s, 1)/(1+s)` either way, so unlike the 3D case,
-`levelset2d_polygon`'s marching squares always resolves the saddle
-ambiguity correctly (via the true cell-center value): the two methods
-disagree only on *where* the crossing is, never on *whether* one exists,
-for any `s`.
+Looking for the 2D analog of this same story -- comparing
+`levelset2d_polygon`'s extracted-polygon edge crossings against the raw
+bilinear field's zero crossings, within a single grid cell? That page
+(`polygon_vs_bilinear_probe.html`) now lives in
+[`levelset2d_bilinear_measure`](../levelset2d_bilinear_measure), backed by
+that project's own `bilinear.hpp`/`polygon_intersection.hpp`.
 
-<img src="docs/images/polygon_vs_bilinear_probe_preview.png" width="860" alt="2D cell view with the probe at s=2, y=0.15, showing the polygon and bilinear crossings at slightly different x positions">
-
-*Shown at `s = 2.00`, `y = 0.15`. Want to sweep the probe and the corner magnitude yourself?* [**Open it live**](https://k-naeba.github.io/levelset_metrology/polygon_vs_bilinear_probe.html).
-
-The "crossing position as the probe sweeps" chart from this page, on its own. First, at
-`s = 0.90`, just shy of the interesting threshold -- an easier read to get oriented: both
-curves trace roughly the same rise, but pull apart noticeably around the middle before the
-gap band, where the polygon's straight edge dives to `x = 0` while the bilinear crossing
-eases off more gradually.
-
-<img src="docs/images/polygon_vs_bilinear_sweep_chart_s09.png" width="860" alt="Crossing position vs. probe height y at s=0.90, showing the polygon and bilinear curves diverging noticeably around the middle of the sweep">
-
-Now push `s` to exactly `1.00` -- the asymptotic-decider threshold itself -- and the gap
-becomes as large as it ever gets. At `s = 1` the bilinear field factors into
-`(2x-1)(1-2y)`, so the true crossing freezes at `x = 0.5` for the *entire* sweep, while the
-polygon's straight-edge approximation still swings across almost the full width of the cell.
-
-<img src="docs/images/polygon_vs_bilinear_sweep_chart.png" width="860" alt="Crossing position vs. probe height y at s=1.00, showing the bilinear crossing frozen at x=0.5 while the polygon crossing swings across nearly the whole cell">
-
-All three pages are self-contained (no build step, no server) and served
+Both pages here are self-contained (no build step, no server) and served
 directly from this repo's `docs/` folder via
-[GitHub Pages](https://k-naeba.github.io/levelset_metrology/); they also
+[GitHub Pages](https://k-naeba.github.io/levelset3d_trilinear_measure/); they also
 still work if you just open the file locally in a browser (or download it
 straight from this repo).
 
 ## Python bindings
 
-A [pybind11](https://github.com/pybind/pybind11) module (`_levelset_metrology`,
-re-exported as `levelset_metrology`) exposes this library's C++ API to
+A [pybind11](https://github.com/pybind/pybind11) module (`_levelset3d_trilinear_measure`,
+re-exported as `levelset3d_trilinear_measure`) exposes this library's C++ API to
 Python for interactive analysis in Jupyter, built via
 [scikit-build-core](https://github.com/scikit-build/scikit-build-core).
 
@@ -183,7 +157,7 @@ pin for the notebook/Plotly/NumPy wheel stack at time of writing.)
 
 ```python
 import numpy as np
-import levelset_metrology as lm
+import levelset3d_trilinear_measure as lm
 
 v = [-1.0, 1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0]
 lm.find_trilinear_crossings(v, np.array([0.0, 0.3, 0.7]), np.array([1.0, 0.0, 0.0]))

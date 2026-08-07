@@ -8,15 +8,15 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(test_trilinear test_trilinear.cpp)
 add_executable(test_mesh_intersection test_mesh_intersection.cpp)
-add_executable(test_levelset_metrology
+add_executable(test_levelset3d_trilinear_measure
     test_trilinear.cpp
     test_mesh_intersection.cpp
 )
 
-foreach(target test_trilinear test_mesh_intersection test_levelset_metrology)
+foreach(target test_trilinear test_mesh_intersection test_levelset3d_trilinear_measure)
     target_link_libraries(${target}
         PRIVATE
-            levelset_metrology
+            levelset3d_trilinear_measure
             GTest::gtest_main
     )
     add_test(NAME ${target} COMMAND ${target})

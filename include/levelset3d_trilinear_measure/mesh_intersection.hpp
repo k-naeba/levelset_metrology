@@ -8,7 +8,7 @@
 #include "common_geometry/mesh3d.hpp"
 #include "common_geometry/types.hpp"
 
-namespace ns_lm {
+namespace ns_ls3tm {
 
 // Standard Moller-Trumbore ray-triangle intersection: returns the ray
 // parameter t (origin + t*dir) where the segment crosses triangle
@@ -57,4 +57,4 @@ inline std::vector<double> FindMeshCrossings(const ns_cg::Mesh3d& mesh,
   return hits;
 }
 
-}  // namespace ns_lm
+}  // namespace ns_ls3tm

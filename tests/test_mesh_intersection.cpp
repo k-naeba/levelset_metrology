@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "levelset_metrology/mesh_intersection.hpp"
+#include "levelset3d_trilinear_measure/mesh_intersection.hpp"
 
-namespace ns_lm {
+namespace ns_ls3tm {
 namespace {
 
 using ns_cg::Mesh3d;
@@ -53,4 +53,4 @@ TEST(FindMeshCrossingsTest, LineMissingTheQuadHasNoCrossings) {
 }
 
 }  // namespace
-}  // namespace ns_lm
+}  // namespace ns_ls3tm

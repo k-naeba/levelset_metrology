@@ -1,4 +1,4 @@
-"""Plotly helpers for visualizing levelset_metrology results in Jupyter.
+"""Plotly helpers for visualizing levelset3d_trilinear_measure results in Jupyter.
 
 Scoped to what this project measures: a mesh, a probe line, and the
 crossing points found along it (by either method). Nothing here knows

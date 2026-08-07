@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-import levelset_metrology as lm
+import levelset3d_trilinear_measure as lm
 
 
 def test_trilinear_value_at_corners_matches_input():

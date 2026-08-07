@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "levelset_metrology/trilinear.hpp"
+#include "levelset3d_trilinear_measure/trilinear.hpp"
 
-namespace ns_lm {
+namespace ns_ls3tm {
 namespace {
 
 using ns_cg::Vec3d;
@@ -55,4 +55,4 @@ TEST(TrilinearTest, SaddleAboveThresholdGivesNoCrossings) {
 }
 
 }  // namespace
-}  // namespace ns_lm
+}  // namespace ns_ls3tm

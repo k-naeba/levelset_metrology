@@ -5,7 +5,7 @@
 
 #include "common_geometry/types.hpp"
 
-namespace ns_lm {
+namespace ns_ls3tm {
 
 // Cube corner offsets in the standard marching-cubes / Lorensen-Cline
 // convention (matches levelset3d_polygon's own kCornerOffset): corner
@@ -83,4 +83,4 @@ inline std::vector<double> FindTrilinearCrossings(const std::array<double, 8>& v
   return roots;
 }
 
-}  // namespace ns_lm
+}  // namespace ns_ls3tm
