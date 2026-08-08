@@ -19,6 +19,24 @@ findings differ in kind, not just in dimension -- see that project's
 README for why `levelset2d_polygon`'s marching squares never produces the
 topological disagreement this project documents below.
 
+## Background: Marching Cubes case topology
+
+<img src="docs/images/marching_cubes_cases.svg" width="640" alt="Marching Cubes: a single cube's linear interpolation along one edge and its triangle patch, plus the 15 base cases grouped by inside-vertex count">
+
+These are the 15 base cases (up to rotation/reflection) `levelset3d_polygon`'s
+marching cubes table resolves the cube's 256 raw corner-sign combinations
+into (`kCubeCornerOffset`/`kTriTable` in `detail/marching_cubes.hpp`).
+This diagram's **case 3** -- two face-diagonal vertices inside -- is the
+classic ambiguous face saddle: this library's own `case5`/`case10` (named
+for their raw 8-bit `case_index`, corners `{0,2}` and `{1,3}` respectively
+-- a different numbering than this reduced 15-case diagram's) are both
+specific instances of it, and `docs/saddle_crossing_diff.html` (below) is
+built entirely around comparing them. The standard table always emits the
+same *fixed* triangulation for this case regardless of corner magnitude,
+which is exactly what lets it disagree with the raw trilinear field's
+true topology. (Case 4, two *body*-diagonal vertices, is a related but
+distinct ambiguity this library doesn't cover.)
+
 ## Requirements
 
 - CMake >= 3.20
